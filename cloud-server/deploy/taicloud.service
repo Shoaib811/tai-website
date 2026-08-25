@@ -1,0 +1,22 @@
+[Unit]
+Description=TAI Cloud API Server
+After=network.target
+
+[Service]
+Type=simple
+User=tai
+Group=tai
+WorkingDirectory=/opt/taicloud
+ExecStart=/opt/taicloud/venv/bin/python app.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/taicloud/data
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+# SENSITIVE - kabhi backup mat karo inko
+cloud-server/data/
+tai/tai_config.json
+tai/tai_cloud_config.json
+cloud-server/server_config.json
+
+# Bade/junk files
+cloud-server/tunnel/cloudflared.exe
+cloud-server/*.log
+__pycache__/
+*.pyc
+*.pyo
+
+# Windows junk
+Thumbs.db
+desktop.ini

@@ -1,0 +1,18 @@
+# TAI Cloud - Reverse Proxy (Caddy)
+# Ye file /etc/caddy/Caddyfile pe jayegi VPS pe.
+# Domain: code99.pk (already configured)
+
+api.code99.pk {
+    reverse_proxy 127.0.0.1:8800
+    encode gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    request_body {
+        max_size 1MB
+    }
+}
