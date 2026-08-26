@@ -3,344 +3,268 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TAI — Tricrypt AI | Your Files. Shredded. Invisible.</title>
-<meta name="description" content="Zero-knowledge encrypted cloud storage. Your files are shattered into invisible encrypted fragments — even we can't read them.">
+<title>CODE99™</title>
+<meta name="description" content="CODE99 — Innovation Beyond Limits. Fragrances & Software.">
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Space+Grotesk:wght@400;500;700&display=swap');
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
+
   :root {
-    --bg: #0d1117;
-    --panel: #161b22;
-    --border: #21262d;
-    --fg: #e6edf3;
-    --muted: #8b949e;
-    --accent: #3fb950;
-    --blue: #1f6feb;
-    --danger: #f85149;
+    --bg: #000000;
+    --surface: #0a0a0a;
+    --card: #111111;
+    --border: #1a1a1a;
+    --border-h: #2a2a2a;
+    --fg: #ffffff;
+    --muted: #666666;
+    --accent: #c8a97e;
+    --accent2: #3b82f6;
+    --glow: rgba(200,169,126,0.15);
   }
+
   body {
     background: var(--bg);
     color: var(--fg);
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    line-height: 1.6;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
   }
-  .mono { font-family: Consolas, monospace; }
-  .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
 
-  nav {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(13,17,23,.92); backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
+  .noise {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 999;
   }
-  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
-  .logo { font-family: Consolas, monospace; font-size: 24px; font-weight: bold; color: var(--accent); text-decoration: none; }
-  .logo span { color: var(--muted); font-size: 13px; margin-left: 8px; }
-  .nav-links { display: flex; gap: 24px; align-items: center; }
-  .nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; transition: color .2s; }
-  .nav-links a:hover { color: var(--fg); }
 
-  .hero { text-align: center; padding: 90px 20px 70px; }
-  .badge {
-    display: inline-block; font-family: Consolas, monospace; font-size: 12px;
-    color: var(--accent); background: rgba(63,185,80,.1); border: 1px solid rgba(63,185,80,.35);
-    padding: 5px 14px; border-radius: 999px; margin-bottom: 24px;
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 40px 24px;
+    position: relative;
   }
-  .hero h1 {
-    font-family: Consolas, monospace;
-    font-size: clamp(34px, 7vw, 64px); line-height: 1.1; margin-bottom: 20px;
+
+  .hero::before {
+    content: '';
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+    pointer-events: none;
   }
-  .hero h1 em { color: var(--accent); font-style: normal; }
-  .hero p.sub { color: var(--muted); font-size: clamp(16px, 2.5vw, 19px); max-width: 640px; margin: 0 auto 36px; }
-  .cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+  .brand {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: clamp(48px, 10vw, 120px);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--fg);
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .brand .tm {
+    font-size: 0.25em;
+    vertical-align: super;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    margin-left: 4px;
+  }
+
+  .tagline {
+    font-size: clamp(14px, 2vw, 18px);
+    color: var(--muted);
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    margin-bottom: 60px;
+    position: relative;
+    z-index: 1;
+    font-weight: 300;
+  }
+
+  .buttons {
+    display: flex; gap: 20px;
+    position: relative; z-index: 1;
+    flex-wrap: wrap; justify-content: center;
+  }
+
   .btn {
-    padding: 14px 30px; border-radius: 8px; font-size: 16px; font-weight: 700;
-    text-decoration: none; cursor: pointer; transition: transform .15s, filter .15s;
-    display: inline-block;
-  }
-  .btn:hover { transform: translateY(-2px); filter: brightness(1.12); }
-  .btn-green { background: var(--accent); color: #04260f; }
-  .btn-outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
-  .soon-note { margin-top: 14px; font-family: Consolas, monospace; font-size: 12px; color: var(--muted); }
-
-  .terminal {
-    max-width: 720px; margin: 50px auto 0; text-align: left;
-    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-    overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.5);
-  }
-  .term-bar { background: #010409; padding: 10px 14px; display: flex; gap: 6px; }
-  .dot { width: 11px; height: 11px; border-radius: 50%; }
-  .red{background:#f85149}.yel{background:#d29922}.grn{background:#3fb950}
-  .term-body { font-family: Consolas, monospace; font-size: 13px; padding: 18px 20px; line-height: 1.9; }
-  .c-mut{color:var(--muted)} .c-grn{color:var(--accent)} .c-blu{color:#79c0ff} .c-red{color:var(--danger)}
-
-  section { padding: 70px 0; }
-  .sec-title { text-align: center; font-family: Consolas, monospace; font-size: 32px; margin-bottom: 10px; }
-  .sec-sub { text-align: center; color: var(--muted); margin-bottom: 46px; }
-
-  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
-  .card {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-    padding: 28px 24px; transition: border-color .2s, transform .2s;
-  }
-  .card:hover { border-color: var(--accent); transform: translateY(-4px); }
-  .card .ico { font-size: 34px; margin-bottom: 14px; }
-  .card h3 { font-family: Consolas, monospace; font-size: 17px; margin-bottom: 8px; color: var(--accent); }
-  .card p { color: var(--muted); font-size: 14px; }
-
-  .steps { counter-reset: step; }
-  .steps .card::before {
-    counter-increment: step; content: "STEP " counter(step);
-    display: block; font-family: Consolas, monospace; font-size: 11px;
-    color: var(--blue); letter-spacing: 2px; margin-bottom: 10px;
+    display: flex; flex-direction: column; align-items: center;
+    min-width: 260px; padding: 40px 48px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    text-decoration: none; color: var(--fg);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    cursor: pointer;
+    position: relative; overflow: hidden;
   }
 
-  .sec-panel {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-    padding: 44px 36px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
-    gap: 26px; text-align: center;
+  .btn::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0; transition: opacity 0.4s;
   }
-  .stat b { display: block; font-family: Consolas, monospace; font-size: 34px; color: var(--accent); }
-  .stat span { color: var(--muted); font-size: 13px; }
 
-  .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; max-width: 780px; margin: 0 auto; }
-  .plan { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 36px 28px; text-align: center; position: relative; }
-  .plan.hot { border-color: var(--accent); }
-  .hot-tag {
-    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-    background: var(--accent); color: #04260f; font-size: 11px; font-weight: 800;
-    padding: 3px 14px; border-radius: 999px; letter-spacing: 1px;
-  }
-  .plan h4 { font-family: Consolas, monospace; font-size: 15px; color: var(--muted); letter-spacing: 2px; }
-  .plan .amt { font-family: Consolas, monospace; font-size: 38px; font-weight: bold; margin: 12px 0 2px; }
-  .plan .per { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
-  .plan ul { list-style: none; font-size: 14px; color: var(--muted); margin-bottom: 22px; text-align: left; }
-  .plan li { padding: 5px 0; }
-  .plan li::before { content: "\2713 "; color: var(--accent); }
-  .plan li.disabled-item::before { content: "\2717 "; color: var(--danger); }
-  .btn-plan {
-    display: block; padding: 11px; border-radius: 7px; text-decoration: none;
-    font-weight: 700; font-size: 14px; background: transparent;
-    border: 1px solid var(--border); color: var(--fg);
-  }
-  .plan.hot .btn-plan { background: var(--accent); color: #04260f; border-color: var(--accent); }
-  .coming-soon-badge {
-    display: inline-block; font-family: Consolas, monospace; font-size: 11px; font-weight: 700;
-    color: #fff; background: var(--blue); padding: 4px 14px; border-radius: 999px;
-    letter-spacing: 1px; margin-bottom: 12px;
-  }
-  .power-list { text-align: left; margin: 16px 0; }
-  .power-list li { padding: 6px 0; font-size: 14px; color: var(--muted); list-style: none; }
-  .power-list li::before { content: "\2B50 "; }
-  .power-list li b { color: var(--fg); }
+  .btn:hover { border-color: var(--border-h); transform: translateY(-6px); }
+  .btn:hover::before { opacity: 1; }
 
-  details {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
-    padding: 16px 20px; margin-bottom: 10px; max-width: 760px; margin-inline: auto;
+  .btn-icon {
+    font-size: 40px; margin-bottom: 18px;
+    filter: grayscale(0.2);
+    transition: filter 0.3s, transform 0.3s;
   }
-  summary { cursor: pointer; font-weight: 600; font-size: 15px; }
-  details p { color: var(--muted); font-size: 14px; margin-top: 10px; }
 
-  .pay-panel {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-    max-width: 900px; margin: 0 auto; padding: 36px;
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 30px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.4);
-  }
-  .pay-col h3 { color: var(--blue); font-size: 13px; letter-spacing: 2px; margin-bottom: 14px; }
-  .pay-num {
-    font-size: 26px; font-weight: bold; color: var(--accent);
-    background: rgba(63,185,80,.08); border: 1px dashed rgba(63,185,80,.4);
-    padding: 10px 18px; border-radius: 8px; margin: 12px 0; text-align: center;
-  }
-  #pay-email {
-    width: 100%; padding: 11px 14px; border-radius: 7px; margin-bottom: 12px;
-    background: var(--bg); border: 1px solid var(--border); color: var(--fg);
-    font-size: 14px;
-  }
-  #pay-email:focus { outline: none; border-color: var(--accent); }
-  .pay-opt {
-    display: block; padding: 8px 0; font-size: 14px; color: var(--muted); cursor: pointer;
-  }
-  .pay-opt input { accent-color: var(--accent); margin-right: 8px; }
-  .pay-btn { width: 100%; margin-top: 12px; }
+  .btn:hover .btn-icon { filter: grayscale(0); transform: scale(1.1); }
 
-  footer { border-top: 1px solid var(--border); padding: 34px 0; margin-top: 40px; }
-  .foot-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; color: var(--muted); font-size: 13px; }
-  .foot-inner a { color: var(--muted); text-decoration: none; }
+  .btn-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px; font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  .btn-sub {
+    font-size: 12px; color: var(--muted);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+
+  .btn-software .btn-sub { color: var(--accent); }
+  .btn-fragrance .btn-sub { color: var(--muted); }
+
+  .btn-fragrance:hover .btn-sub { color: var(--fg); }
+
+  .divider {
+    width: 60px; height: 1px;
+    background: var(--border);
+    margin: 40px auto 0;
+    position: relative; z-index: 1;
+  }
+
+  .footer {
+    position: absolute; bottom: 30px;
+    width: 100%; text-align: center;
+    color: var(--muted); font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+
+  .footer a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .footer a:hover { color: var(--accent); }
+
+  /* Coming Soon Overlay */
+  .overlay {
+    display: none;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(20px);
+    z-index: 1000;
+    align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .overlay.active { display: flex; opacity: 1; }
+
+  .overlay-box {
+    text-align: center;
+    padding: 60px 40px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    max-width: 440px;
+    position: relative;
+  }
+
+  .overlay-box .close-btn {
+    position: absolute; top: 16px; right: 20px;
+    background: none; border: none; color: var(--muted);
+    font-size: 24px; cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .overlay-box .close-btn:hover { color: var(--fg); }
+
+  .overlay-box h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px; margin-bottom: 12px;
+  }
+
+  .overlay-box p {
+    color: var(--muted); font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .overlay-box .timer {
+    margin-top: 24px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px; color: var(--accent);
+    letter-spacing: 0.15em;
+  }
+
+  @media (max-width: 600px) {
+    .buttons { flex-direction: column; align-items: center; }
+    .btn { min-width: 280px; }
+  }
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="container nav-inner">
-    <a class="logo" href="#">TAI<span>Tricrypt AI</span></a>
-    <div class="nav-links">
-      <a href="#how">How it works</a>
-      <a href="#security">Security</a>
-      <a href="#pricing">Pricing</a>
-      <a href="#faq">FAQ</a>
-    </div>
-  </div>
-</nav>
+<div class="noise"></div>
 
-<header class="hero container">
-  <span class="badge">&#128274; ZERO-KNOWLEDGE ENCRYPTION</span>
-  <h1>Your files.<br><em>Shredded.</em> Invisible.</h1>
-  <p class="sub">
-    TAI shatters your documents into thousands of encrypted fragments scattered across
-    the cloud. No names. No structure. Not even <b>we</b> can read them.
+<section class="hero">
+  <h1 class="brand">C O D E 9 9<span class="tm">™</span></h1>
+  <p class="tagline">Innovation Beyond Limits</p>
+
+  <div class="buttons">
+    <a class="btn btn-fragrance" onclick="showComingSoon()">
+      <span class="btn-icon">🧴</span>
+      <span class="btn-label">Fragrances</span>
+      <span class="btn-sub">Coming Soon</span>
+    </a>
+
+    <a href="software.html" class="btn btn-software">
+      <span class="btn-icon">💻</span>
+      <span class="btn-label">Software</span>
+      <span class="btn-sub">Explore Now →</span>
+    </a>
+  </div>
+
+  <div class="divider"></div>
+
+  <p class="footer">
+    &copy; 2026 CODE99 &mdash;
+    <a href="mailto:info@code99.pk">info@code99.pk</a>
   </p>
-  <div class="cta-row">
-    <a href="#pricing" class="btn btn-green">View Plans &amp; Pricing</a>
-    <a href="#how" class="btn btn-outline">See How It Works</a>
-  </div>
-  <p class="soon-note">// public beta now open &#8212; built in Pakistan &#127463;&#127462;</p>
-
-  <div class="terminal">
-    <div class="term-bar"><span class="dot red"></span><span class="dot yel"></span><span class="dot grn"></span></div>
-    <div class="term-body">
-      <div><span class="c-mut"># You load:</span> <span class="c-blu">contract_final.pdf</span></div>
-      <div><span class="c-grn">[TAI]</span> Encrypting... AES-256-GCM &#10003;</div>
-      <div><span class="c-grn">[TAI]</span> Shattering into 47 fragments x 100KB &#10003;</div>
-      <div><span class="c-grn">[TAI]</span> Scattering across cloud &#10003;</div>
-      <div><span class="c-mut"># On the server, all that exists:</span></div>
-      <div><span class="c-red">1dcafe34e6a1ef6a...</span> <span class="c-red">2e4f381cc2eb5205...</span></div>
-      <div><span class="c-red">574b3a51622778d6...</span> <span class="c-red">69b95d719e5f8422...</span></div>
-      <div><span class="c-mut"># Original filename? Nowhere. Content? Pure randomness (entropy 8.00/8.00).</span></div>
-      <div><span class="c-grn">[TAI]</span> Shortcut created. Double-click to restore anytime &#10003;</div>
-    </div>
-  </div>
-</header>
-
-<section id="how">
-  <div class="container">
-    <h2 class="sec-title">How It Works</h2>
-    <p class="sec-sub">Three steps between your file and total invisibility.</p>
-    <div class="grid3 steps">
-      <div class="card">
-        <div class="ico">&#128194;</div>
-        <h3>LOAD YOUR FILE</h3>
-        <p>Drag any document, photo, video or archive into TAI. The original vanishes from your PC instantly.</p>
-      </div>
-      <div class="card">
-        <div class="ico">&#128272;</div>
-        <h3>ENCRYPT &amp; SHATTER</h3>
-        <p>AES-256-GCM encryption happens on YOUR device. Then TAI slices the file into identical 100 KB encrypted fragments padded with random noise.</p>
-      </div>
-      <div class="card">
-        <div class="ico">&#9729;&#65039;</div>
-        <h3>SCATTER &amp; RESTORE</h3>
-        <p>Fragments are stored under random IDs &#8212; no filenames, no order. A smart shortcut restores everything with one double-click.</p>
-      </div>
-    </div>
-  </div>
 </section>
 
-<section id="security" style="background:var(--panel); border-block:1px solid var(--border);">
-  <div class="container">
-    <h2 class="sec-title">Security That Proves Itself</h2>
-    <p class="sec-sub">Not marketing claims &#8212; measurable facts.</p>
-    <div class="sec-panel">
-      <div class="stat"><b>AES-256</b><span>GCM authenticated encryption</span></div>
-      <div class="stat"><b>600K</b><span>PBKDF2 key derivation rounds</span></div>
-      <div class="stat"><b>8.00/8.00</b><span>Shannon entropy &#8212; perfect randomness</span></div>
-      <div class="stat"><b>0 bytes</b><span>of readable data stored on our servers</span></div>
-    </div>
+<div class="overlay" id="comingSoon" onclick="closeOverlay(event)">
+  <div class="overlay-box" onclick="event.stopPropagation()">
+    <button class="close-btn" onclick="closeOverlay()">&times;</button>
+    <h2>🧴 Coming Soon</h2>
+    <p>CODE99 Fragrances launch hone wala hai. Premium scents, curated for those who demand excellence.</p>
+    <div class="timer">STAY TUNED</div>
   </div>
-</section>
+</div>
 
-<section id="pricing">
-  <div class="container">
-    <h2 class="sec-title">Simple Pricing</h2>
-    <p class="sec-sub">Start free. Upgrade when you love it.</p>
-    <div class="price-grid">
-
-      <div class="plan hot">
-        <span class="hot-tag">START FREE</span>
-        <h4>BASIC</h4>
-        <div class="amt">Free</div>
-        <div class="per">Full trial &#8212; no time limit</div>
-        <ul>
-          <li><b>1 GB</b> encrypted storage</li>
-          <li>AES-256-GCM encryption</li>
-          <li>Cloud upload + download</li>
-          <li>Desktop shortcuts</li>
-          <li>Single-file upload</li>
-          <li>Email verification</li>
-          <li>Recovery key backup</li>
-        </ul>
-        <a href="TAI-Basic.zip" class="btn-plan" download>&#11015; Download Free</a>
-      </div>
-
-      <div class="plan">
-        <span class="coming-soon-badge">COMING SOON</span>
-        <h4>PRO</h4>
-        <div class="amt" style="color:var(--muted);">Rs 900<span style="font-size:14px;color:var(--muted)">/mo</span></div>
-        <div class="per">or Rs 9,000/year</div>
-        <ul>
-          <li><b>5 GB</b> encrypted storage</li>
-          <li>Split-file encryption (100KB parts)</li>
-          <li>Cross-device restore</li>
-          <li>Multi-file batch upload</li>
-          <li>File version history</li>
-          <li>Priority support</li>
-          <li>Auto-shuffle file IDs</li>
-        </ul>
-        <div class="btn-plan" style="opacity:0.5; cursor:not-allowed;">Coming Soon</div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<section id="payment" style="display:none;">
-</section>
-
-<section id="faq">
-  <div class="container">
-    <h2 class="sec-title">FAQ</h2>
-    <p class="sec-sub">Sawal jo har banda poochta hai.</p>
-    <details open>
-      <summary>If you can't read my files, how do you store them?</summary>
-      <p>Encryption happens on YOUR device before anything leaves it. Our servers only ever receive meaningless random-looking fragments. Your password never reaches us &#8212; so we literally cannot peek.</p>
-    </details>
-    <details>
-      <summary>What if I forget my password?</summary>
-      <p>You get a one-time Recovery Key at signup. Password + Recovery Key both lost = data unrecoverable by anyone, including us. We warn you loudly about this because we take zero-knowledge seriously.</p>
-    </details>
-    <details>
-      <summary>Which platforms are supported?</summary>
-      <p>Windows app first (beta). Mac/Linux versions are on the roadmap.</p>
-    </details>
-    <details>
-      <summary>Is my data really safe from hackers?</summary>
-      <p>Every fragment is independently AES-256-GCM encrypted with keys derived on your device. Even a full server breach yields only random bytes with maximum entropy &#8212; mathematically useless without your key.</p>
-    </details>
-    <details>
-      <summary>When will Pro be available?</summary>
-      <p>Pro is actively being developed. Features include cross-device restore, split-file encryption, file versioning and more. Stay tuned!</p>
-    </details>
-  </div>
-</section>
-
-<section id="contact">
-  <div class="container" style="text-align:center;">
-    <h2 class="sec-title">Contact Us</h2>
-    <p class="sec-sub">Koi bhi sawal ho, reach out karo.</p>
-    <p style="font-size:16px; margin-bottom:10px;">
-      &#128231; <a href="mailto:info@code99.pk" style="color:var(--accent); text-decoration:none; font-weight:600;">info@code99.pk</a>
-    </p>
-    <p style="color:var(--muted); font-size:14px;">
-      WhatsApp: <a href="https://wa.me/923210790790" style="color:var(--blue); text-decoration:none;">0321-0790790</a>
-    </p>
-  </div>
-</section>
-
-<footer>
-  <div class="container foot-inner">
-    <div>&copy; 2026 Tricrypt AI &#8212; code99.pk</div>
-    <div><a href="#">Terms</a> &nbsp;&middot;&nbsp; <a href="#">Privacy</a> &nbsp;&middot;&nbsp; <a href="mailto:info@code99.pk">info@code99.pk</a></div>
-  </div>
-</footer>
+<script>
+  function showComingSoon() {
+    const el = document.getElementById('comingSoon');
+    el.classList.add('active');
+  }
+  function closeOverlay(e) {
+    if (!e || e.target === document.getElementById('comingSoon')) {
+      document.getElementById('comingSoon').classList.remove('active');
+    }
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeOverlay();
+  });
+</script>
 
 </body>
 </html>
