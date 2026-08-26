@@ -26,7 +26,6 @@
   .mono { font-family: Consolas, monospace; }
   .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
 
-  /* NAV */
   nav {
     position: sticky; top: 0; z-index: 100;
     background: rgba(13,17,23,.92); backdrop-filter: blur(10px);
@@ -38,12 +37,7 @@
   .nav-links { display: flex; gap: 24px; align-items: center; }
   .nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; transition: color .2s; }
   .nav-links a:hover { color: var(--fg); }
-  .btn-nav {
-    background: var(--blue); color: #fff !important; padding: 8px 18px;
-    border-radius: 6px; font-weight: 600; border: 1px solid #388bfd;
-  }
 
-  /* HERO */
   .hero { text-align: center; padding: 90px 20px 70px; }
   .badge {
     display: inline-block; font-family: Consolas, monospace; font-size: 12px;
@@ -67,7 +61,6 @@
   .btn-outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
   .soon-note { margin-top: 14px; font-family: Consolas, monospace; font-size: 12px; color: var(--muted); }
 
-  /* TERMINAL MOCK */
   .terminal {
     max-width: 720px; margin: 50px auto 0; text-align: left;
     background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
@@ -79,7 +72,6 @@
   .term-body { font-family: Consolas, monospace; font-size: 13px; padding: 18px 20px; line-height: 1.9; }
   .c-mut{color:var(--muted)} .c-grn{color:var(--accent)} .c-blu{color:#79c0ff} .c-red{color:var(--danger)}
 
-  /* SECTIONS */
   section { padding: 70px 0; }
   .sec-title { text-align: center; font-family: Consolas, monospace; font-size: 32px; margin-bottom: 10px; }
   .sec-sub { text-align: center; color: var(--muted); margin-bottom: 46px; }
@@ -101,7 +93,6 @@
     color: var(--blue); letter-spacing: 2px; margin-bottom: 10px;
   }
 
-  /* SECURITY */
   .sec-panel {
     background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
     padding: 44px 36px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
@@ -110,9 +101,8 @@
   .stat b { display: block; font-family: Consolas, monospace; font-size: 34px; color: var(--accent); }
   .stat span { color: var(--muted); font-size: 13px; }
 
-  /* PRICING */
-  .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 900px; margin: 0 auto; }
-  .plan { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 32px 26px; text-align: center; position: relative; }
+  .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; max-width: 780px; margin: 0 auto; }
+  .plan { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 36px 28px; text-align: center; position: relative; }
   .plan.hot { border-color: var(--accent); }
   .hot-tag {
     position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
@@ -122,18 +112,26 @@
   .plan h4 { font-family: Consolas, monospace; font-size: 15px; color: var(--muted); letter-spacing: 2px; }
   .plan .amt { font-family: Consolas, monospace; font-size: 38px; font-weight: bold; margin: 12px 0 2px; }
   .plan .per { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
-  .plan ul { list-style: none; font-size: 14px; color: var(--muted); margin-bottom: 22px; }
+  .plan ul { list-style: none; font-size: 14px; color: var(--muted); margin-bottom: 22px; text-align: left; }
   .plan li { padding: 5px 0; }
-  .plan li::before { content: "✓ "; color: var(--accent); }
+  .plan li::before { content: "\2713 "; color: var(--accent); }
+  .plan li.disabled-item::before { content: "\2717 "; color: var(--danger); }
   .btn-plan {
     display: block; padding: 11px; border-radius: 7px; text-decoration: none;
     font-weight: 700; font-size: 14px; background: transparent;
     border: 1px solid var(--border); color: var(--fg);
   }
   .plan.hot .btn-plan { background: var(--accent); color: #04260f; border-color: var(--accent); }
-  .disabled { opacity: .55; pointer-events: none; }
+  .coming-soon-badge {
+    display: inline-block; font-family: Consolas, monospace; font-size: 11px; font-weight: 700;
+    color: #fff; background: var(--blue); padding: 4px 14px; border-radius: 999px;
+    letter-spacing: 1px; margin-bottom: 12px;
+  }
+  .power-list { text-align: left; margin: 16px 0; }
+  .power-list li { padding: 6px 0; font-size: 14px; color: var(--muted); list-style: none; }
+  .power-list li::before { content: "\2B50 "; }
+  .power-list li b { color: var(--fg); }
 
-  /* FAQ */
   details {
     background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
     padding: 16px 20px; margin-bottom: 10px; max-width: 760px; margin-inline: auto;
@@ -141,36 +139,6 @@
   summary { cursor: pointer; font-weight: 600; font-size: 15px; }
   details p { color: var(--muted); font-size: 14px; margin-top: 10px; }
 
-  /* DOWNLOAD */
-  .dl-panel {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-    max-width: 820px; margin: 0 auto; padding: 40px 38px;
-    display: grid; grid-template-columns: auto 1fr; gap: 34px; align-items: start;
-    box-shadow: 0 20px 60px rgba(0,0,0,.4);
-  }
-  @media (max-width: 640px) { .dl-panel { grid-template-columns: 1fr; } }
-  .dl-left { text-align: center; }
-  .dl-ico { font-size: 62px; line-height: 1.1; margin-bottom: 8px; }
-  .dl-os {
-    font-size: 11px; letter-spacing: 2px; color: var(--muted);
-    border: 1px solid var(--border); padding: 3px 12px; border-radius: 999px;
-  }
-  .dl-right h3 { font-family: Consolas, monospace; font-size: 24px; margin-bottom: 6px; }
-  .ver {
-    font-size: 11px; color: var(--accent); background: rgba(63,185,80,.1);
-    border: 1px solid rgba(63,185,80,.35); padding: 2px 10px;
-    border-radius: 999px; vertical-align: middle; margin-left: 8px;
-  }
-  .dl-meta { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
-  .dl-btn { font-size: 17px; }
-  .dl-note { font-family: Consolas, monospace; font-size: 12px; color: var(--muted); margin-top: 14px; }
-  .dl-steps {
-    display: flex; flex-wrap: wrap; gap: 18px; margin-top: 22px; padding-top: 20px;
-    border-top: 1px dashed var(--border); font-size: 12.5px; color: var(--muted);
-  }
-  .dl-steps b { color: var(--blue); }
-
-  /* PAYMENT */
   .pay-panel {
     background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
     max-width: 900px; margin: 0 auto; padding: 36px;
@@ -210,36 +178,35 @@
       <a href="#security">Security</a>
       <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
-      <a href="#download" class="btn-nav">Download App</a>
     </div>
   </div>
 </nav>
 
 <header class="hero container">
-  <span class="badge">🔒 ZERO-KNOWLEDGE ENCRYPTION</span>
+  <span class="badge">&#128274; ZERO-KNOWLEDGE ENCRYPTION</span>
   <h1>Your files.<br><em>Shredded.</em> Invisible.</h1>
   <p class="sub">
     TAI shatters your documents into thousands of encrypted fragments scattered across
     the cloud. No names. No structure. Not even <b>we</b> can read them.
   </p>
   <div class="cta-row">
-    <a href="#download" class="btn btn-green">⬇ Get the Beta — Free</a>
+    <a href="#pricing" class="btn btn-green">View Plans &amp; Pricing</a>
     <a href="#how" class="btn btn-outline">See How It Works</a>
   </div>
-  <p class="soon-note">// public beta now open — built in Pakistan 🇵🇰</p>
+  <p class="soon-note">// public beta now open &#8212; built in Pakistan &#127463;&#127462;</p>
 
   <div class="terminal">
     <div class="term-bar"><span class="dot red"></span><span class="dot yel"></span><span class="dot grn"></span></div>
     <div class="term-body">
       <div><span class="c-mut"># You load:</span> <span class="c-blu">contract_final.pdf</span></div>
-      <div><span class="c-grn">[TAI]</span> Encrypting... AES-256-GCM ✓</div>
-      <div><span class="c-grn">[TAI]</span> Shattering into 47 fragments x 100KB ✓</div>
-      <div><span class="c-grn">[TAI]</span> Scattering across cloud ✓</div>
+      <div><span class="c-grn">[TAI]</span> Encrypting... AES-256-GCM &#10003;</div>
+      <div><span class="c-grn">[TAI]</span> Shattering into 47 fragments x 100KB &#10003;</div>
+      <div><span class="c-grn">[TAI]</span> Scattering across cloud &#10003;</div>
       <div><span class="c-mut"># On the server, all that exists:</span></div>
       <div><span class="c-red">1dcafe34e6a1ef6a...</span> <span class="c-red">2e4f381cc2eb5205...</span></div>
       <div><span class="c-red">574b3a51622778d6...</span> <span class="c-red">69b95d719e5f8422...</span></div>
       <div><span class="c-mut"># Original filename? Nowhere. Content? Pure randomness (entropy 8.00/8.00).</span></div>
-      <div><span class="c-grn">[TAI]</span> Shortcut created. Double-click to restore anytime ✓</div>
+      <div><span class="c-grn">[TAI]</span> Shortcut created. Double-click to restore anytime &#10003;</div>
     </div>
   </div>
 </header>
@@ -250,19 +217,19 @@
     <p class="sec-sub">Three steps between your file and total invisibility.</p>
     <div class="grid3 steps">
       <div class="card">
-        <div class="ico">📂</div>
+        <div class="ico">&#128194;</div>
         <h3>LOAD YOUR FILE</h3>
         <p>Drag any document, photo, video or archive into TAI. The original vanishes from your PC instantly.</p>
       </div>
       <div class="card">
-        <div class="ico">🔐</div>
+        <div class="ico">&#128272;</div>
         <h3>ENCRYPT &amp; SHATTER</h3>
         <p>AES-256-GCM encryption happens on YOUR device. Then TAI slices the file into identical 100 KB encrypted fragments padded with random noise.</p>
       </div>
       <div class="card">
-        <div class="ico">☁️</div>
+        <div class="ico">&#9729;&#65039;</div>
         <h3>SCATTER &amp; RESTORE</h3>
-        <p>Fragments are stored under random IDs — no filenames, no order. A smart shortcut restores everything with one double-click.</p>
+        <p>Fragments are stored under random IDs &#8212; no filenames, no order. A smart shortcut restores everything with one double-click.</p>
       </div>
     </div>
   </div>
@@ -271,36 +238,12 @@
 <section id="security" style="background:var(--panel); border-block:1px solid var(--border);">
   <div class="container">
     <h2 class="sec-title">Security That Proves Itself</h2>
-    <p class="sec-sub">Not marketing claims — measurable facts.</p>
+    <p class="sec-sub">Not marketing claims &#8212; measurable facts.</p>
     <div class="sec-panel">
       <div class="stat"><b>AES-256</b><span>GCM authenticated encryption</span></div>
       <div class="stat"><b>600K</b><span>PBKDF2 key derivation rounds</span></div>
-      <div class="stat"><b>8.00/8.00</b><span>Shannon entropy — perfect randomness</span></div>
+      <div class="stat"><b>8.00/8.00</b><span>Shannon entropy &#8212; perfect randomness</span></div>
       <div class="stat"><b>0 bytes</b><span>of readable data stored on our servers</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="download">
-  <div class="container">
-    <h2 class="sec-title">Download TAI</h2>
-    <p class="sec-sub">Free while in beta. No card. No tracking.</p>
-    <div class="dl-panel">
-      <div class="dl-left">
-        <div class="dl-ico">🛡️</div>
-        <span class="dl-os mono">WINDOWS</span>
-      </div>
-      <div class="dl-right">
-        <h3>TAI Beta<span class="ver">v0.9</span></h3>
-        <p class="dl-meta">Windows 10 / 11 &nbsp;·&nbsp; 64-bit &nbsp;·&nbsp; ~13 KB download &nbsp;·&nbsp; requires free Python runtime</p>
-        <a href="TAI-Beta.zip" class="btn btn-green dl-btn" download>⬇ Download for Windows</a>
-        <p class="dl-note">// encrypted on your device · scattered to cloud · restored by you only</p>
-        <div class="dl-steps mono">
-          <span><b>1.</b> Install Python</span>
-          <span><b>2.</b> Unzip → run "Install requirements.bat"</span>
-          <span><b>3.</b> Double-click TAI.bat — done</span>
-        </div>
-      </div>
     </div>
   </div>
 </section>
@@ -308,93 +251,49 @@
 <section id="pricing">
   <div class="container">
     <h2 class="sec-title">Simple Pricing</h2>
-    <p class="sec-sub">Start free. Upgrade when you love it. Monthly billing — cancel anytime.</p>
+    <p class="sec-sub">Start free. Upgrade when you love it.</p>
     <div class="price-grid">
-      <div class="plan">
-        <h4>TRIAL</h4>
-        <div class="amt">Free</div>
-        <div class="per">14 days</div>
-        <ul>
-          <li>2 GB storage</li>
-          <li>All security features</li>
-          <li>No card required</li>
-        </ul>
-        <a href="#download" class="btn-plan">Start Free</a>
-      </div>
+
       <div class="plan hot">
-        <span class="hot-tag">MOST POPULAR</span>
+        <span class="hot-tag">START FREE</span>
         <h4>BASIC</h4>
-        <div class="amt">Rs 300<span style="font-size:14px;color:var(--muted)">/mo</span></div>
-        <div class="per">or Rs 3,000/year</div>
+        <div class="amt">Free</div>
+        <div class="per">Full trial &#8212; no time limit</div>
         <ul>
-          <li>15 GB storage</li>
-          <li>Unlimited file loads</li>
-          <li>Restore on any PC</li>
+          <li><b>1 GB</b> encrypted storage</li>
+          <li>AES-256-GCM encryption</li>
+          <li>Cloud upload + download</li>
+          <li>Desktop shortcuts</li>
+          <li>Single-file upload</li>
+          <li>Email verification</li>
+          <li>Recovery key backup</li>
         </ul>
-        <a href="#payment" class="btn-plan">Pay &amp; Activate</a>
+        <a href="TAI-Basic.zip" class="btn-plan" download>&#11015; Download Free</a>
       </div>
+
       <div class="plan">
+        <span class="coming-soon-badge">COMING SOON</span>
         <h4>PRO</h4>
-        <div class="amt">Rs 900<span style="font-size:14px;color:var(--muted)">/mo</span></div>
+        <div class="amt" style="color:var(--muted);">Rs 900<span style="font-size:14px;color:var(--muted)">/mo</span></div>
         <div class="per">or Rs 9,000/year</div>
         <ul>
-          <li>100 GB storage</li>
+          <li><b>5 GB</b> encrypted storage</li>
+          <li>Split-file encryption (100KB parts)</li>
+          <li>Cross-device restore</li>
+          <li>Multi-file batch upload</li>
+          <li>File version history</li>
           <li>Priority support</li>
-          <li>Business usage allowed</li>
+          <li>Auto-shuffle file IDs</li>
         </ul>
-        <a href="#payment" class="btn-plan">Pay &amp; Activate</a>
+        <div class="btn-plan" style="opacity:0.5; cursor:not-allowed;">Coming Soon</div>
       </div>
+
     </div>
   </div>
 </section>
 
-<section id="payment">
-  <div class="container">
-    <h2 class="sec-title">Activate Your Plan</h2>
-    <p class="sec-sub">Simple monthly billing — no cards, no auto-charges. You stay in control.</p>
-
-    <div class="pay-panel">
-      <div class="pay-col">
-        <h3 class="mono">STEP 1 · PAY</h3>
-        <p style="color:var(--muted); font-size:14px;">Send via <b>Easypaisa / JazzCash</b>:</p>
-        <div class="pay-num mono">0321-0790790</div>
-        <p style="color:var(--muted); font-size:14px;">Basic <b>Rs 300</b> &nbsp;·&nbsp; Pro <b>Rs 900</b><br>
-        <span style="font-size:12px;">(yearly: Rs 3,000 / Rs 9,000)</span></p>
-      </div>
-
-      <div class="pay-col">
-        <h3 class="mono">STEP 2 · CONFIRM</h3>
-        <input type="text" id="pay-email" placeholder="Your TAI account email" autocomplete="off">
-        <label class="pay-opt"><input type="radio" name="plan" value="BASIC - Rs 300/month" checked> BASIC — Rs 300/month (15 GB)</label>
-        <label class="pay-opt"><input type="radio" name="plan" value="PRO - Rs 900/month"> PRO — Rs 900/month (100 GB)</label>
-        <button class="btn btn-green pay-btn" onclick="confirmOrder()">💬 Confirm on WhatsApp</button>
-        <p style="color:var(--muted); font-size:12px; margin-top:10px;">
-          ya email karein: <a href="mailto:support@code99.pk?subject=TAI%20Plan%20Activation" style="color:#79c0ff;">support@code99.pk</a>
-        </p>
-      </div>
-
-      <div class="pay-col">
-        <h3 class="mono">STEP 3 · DONE</h3>
-        <p style="color:var(--muted); font-size:14px;">Storage activated within <b>24 hours</b> (usually minutes).<br><br>
-        🔒 Zero-knowledge: hum sirf aapka plan status rakhte hain — files kabhi nahi.</p>
-      </div>
-    </div>
-
-    <p class="soon-note" style="text-align:center; margin-top:26px;">// billed monthly · cancel anytime · no auto-debit, ever //</p>
-  </div>
+<section id="payment" style="display:none;">
 </section>
-
-<script>
-function confirmOrder() {
-  var em = document.getElementById('pay-email').value.trim() || '(email not provided)';
-  var pl = document.querySelector('input[name="plan"]:checked').value;
-  var tx = 'TAI Plan Activation' +
-           '\nPlan: ' + pl +
-           '\nTAI Email: ' + em +
-           '\nTransaction ID: ';
-  window.open('https://wa.me/923210790790?text=' + encodeURIComponent(tx), '_blank');
-}
-</script>
 
 <section id="faq">
   <div class="container">
@@ -402,7 +301,7 @@ function confirmOrder() {
     <p class="sec-sub">Sawal jo har banda poochta hai.</p>
     <details open>
       <summary>If you can't read my files, how do you store them?</summary>
-      <p>Encryption happens on YOUR device before anything leaves it. Our servers only ever receive meaningless random-looking fragments. Your password never reaches us — so we literally cannot peek.</p>
+      <p>Encryption happens on YOUR device before anything leaves it. Our servers only ever receive meaningless random-looking fragments. Your password never reaches us &#8212; so we literally cannot peek.</p>
     </details>
     <details>
       <summary>What if I forget my password?</summary>
@@ -414,19 +313,32 @@ function confirmOrder() {
     </details>
     <details>
       <summary>Is my data really safe from hackers?</summary>
-      <p>Every fragment is independently AES-256-GCM encrypted with keys derived on your device. Even a full server breach yields only random bytes with maximum entropy — mathematically useless without your key.</p>
+      <p>Every fragment is independently AES-256-GCM encrypted with keys derived on your device. Even a full server breach yields only random bytes with maximum entropy &#8212; mathematically useless without your key.</p>
     </details>
     <details>
-      <summary>How does billing work? Will I be charged automatically?</summary>
-      <p>Never. Basic and Pro are simple monthly payments you send yourself via Easypaisa/JazzCash. There are no auto-debits, no stored cards, no surprise charges. Want to stop? Just stop paying — your plan simply stays at the free trial level. Your files remain safe.</p>
+      <summary>When will Pro be available?</summary>
+      <p>Pro is actively being developed. Features include cross-device restore, split-file encryption, file versioning and more. Stay tuned!</p>
     </details>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="container" style="text-align:center;">
+    <h2 class="sec-title">Contact Us</h2>
+    <p class="sec-sub">Koi bhi sawal ho, reach out karo.</p>
+    <p style="font-size:16px; margin-bottom:10px;">
+      &#128231; <a href="mailto:info@code99.pk" style="color:var(--accent); text-decoration:none; font-weight:600;">info@code99.pk</a>
+    </p>
+    <p style="color:var(--muted); font-size:14px;">
+      WhatsApp: <a href="https://wa.me/923210790790" style="color:var(--blue); text-decoration:none;">0321-0790790</a>
+    </p>
   </div>
 </section>
 
 <footer>
   <div class="container foot-inner">
-    <div>© 2026 Tricrypt AI — code99.pk</div>
-    <div><a href="#">Terms</a> &nbsp;·&nbsp; <a href="#">Privacy</a> &nbsp;·&nbsp; <a href="mailto:support@code99.pk">support@code99.pk</a></div>
+    <div>&copy; 2026 Tricrypt AI &#8212; code99.pk</div>
+    <div><a href="#">Terms</a> &nbsp;&middot;&nbsp; <a href="#">Privacy</a> &nbsp;&middot;&nbsp; <a href="mailto:info@code99.pk">info@code99.pk</a></div>
   </div>
 </footer>
 

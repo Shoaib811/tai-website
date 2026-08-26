@@ -2,12 +2,10 @@ import hashlib
 import json
 import re
 import secrets
-import smtplib
 import sqlite3
 import threading
 import time
 from datetime import datetime, timedelta, timezone
-from email.mime.text import MIMEText
 from pathlib import Path
 
 import jwt
@@ -35,34 +33,6 @@ TOKEN_TTL_HOURS = 24 * 7
 PBKDF2_ITERS = 600_000
 BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-
-SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 587
-SMTP_USER = "cccshoaib005@gmail.com"
-SMTP_PASS = "adrkbynkceccdoks"
-EMAIL_FROM = "TAI Cloud <cccshoaib005@gmail.com>"
-
-
-def send_verification_email(to_email: str, code: str) -> bool:
-    if not SMTP_PASS:
-        return False
-    try:
-        msg = MIMEText(
-            f"Your TAI Cloud verification code is: {code}\n\n"
-            f"This code expires in 10 minutes.\n"
-            f"If you did not request this, ignore this email.",
-            "plain", "utf-8"
-        )
-        msg["Subject"] = "TAI Cloud - Verification Code"
-        msg["From"] = EMAIL_FROM
-        msg["To"] = to_email
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as s:
-            s.starttls()
-            s.login(SMTP_USER, SMTP_PASS)
-            s.send_message(msg)
-        return True
-    except Exception:
-        return False
 
 DB_SCRIPT = """
 CREATE TABLE IF NOT EXISTS users (
@@ -109,7 +79,6 @@ JWT_SECRET = load_secret()
 _db_lock = threading.Lock()
 _rl_lock = threading.Lock()
 _rl_buckets: dict = {}
-_pending_verifications: dict = {}
 
 
 def query(sql, params=(), fetch=False):
@@ -223,21 +192,6 @@ class AuthIn(BaseModel):
     password: str
 
 
-class VerifyCodeIn(BaseModel):
-    email: str
-    code: str
-
-
-class ForgotSendIn(BaseModel):
-    email: str
-
-
-class ForgotResetIn(BaseModel):
-    email: str
-    code: str
-    new_password: str
-
-
 class RecoverIn(BaseModel):
     email: str
     recovery_key: str
@@ -290,54 +244,6 @@ def signup(body: AuthIn):
     }
 
 
-@app.post("/api/v1/auth/send-code")
-def send_code(body: AuthIn):
-    rate_limit(f"sendcode:{body.email.lower()}", 5)
-    if not EMAIL_RE.match(body.email):
-        raise HTTPException(400, "invalid_email")
-    if not validate_password(body.password):
-        raise HTTPException(400, "weak_password")
-    existing = query("SELECT id FROM users WHERE email=?", (body.email,), fetch=True)
-    if existing:
-        raise HTTPException(409, "email_taken")
-    code = f"{secrets.randbelow(900000) + 100000}"
-    _pending_verifications[body.email.lower()] = {
-        "code": code,
-        "password": body.password,
-        "expires": time.time() + 600,
-    }
-    email_sent = send_verification_email(body.email, code)
-    return {"message": "code_sent", "email_sent": email_sent}
-
-
-@app.post("/api/v1/auth/verify-code")
-def verify_code(body: VerifyCodeIn):
-    email = body.email.lower()
-    pending = _pending_verifications.get(email)
-    if not pending:
-        raise HTTPException(400, "no_pending_verification")
-    if time.time() > pending["expires"]:
-        _pending_verifications.pop(email, None)
-        raise HTTPException(400, "code_expired")
-    if body.code != pending["code"]:
-        raise HTTPException(400, "invalid_code")
-    _pending_verifications.pop(email, None)
-    pw = pending["password"]
-    recovery_key = gen_recovery_key()
-    recovery_hash = hashlib.sha256(recovery_key.encode()).hexdigest()
-    query(
-        "INSERT INTO users (email, pw_hash, recovery_hash, plan, quota_bytes) VALUES (?,?,?,?,?)",
-        (email, hash_password(pw), recovery_hash, "trial", TRIAL_QUOTA),
-    )
-    user_id = query("SELECT id FROM users WHERE email=?", (email,), fetch=True)[0]["id"]
-    return {
-        "token": issue_token(user_id),
-        "recovery_key": recovery_key,
-        "quota_bytes": TRIAL_QUOTA,
-        "message": "Save this recovery key NOW - it is shown only once",
-    }
-
-
 @app.post("/api/v1/auth/login")
 def login(body: AuthIn, request: Request):
     rate_limit(f"login:{request.client.host}", 5)
@@ -353,47 +259,6 @@ def login(body: AuthIn, request: Request):
         "quota_bytes": rows[0]["quota_bytes"],
         "used_bytes": used_bytes(uid),
     }
-
-
-@app.post("/api/v1/auth/forgot-send")
-def forgot_send(body: ForgotSendIn):
-    rate_limit(f"forgot:{body.email.lower()}", 5)
-    email = body.email.lower()
-    rows = query("SELECT id FROM users WHERE email=?", (email,), fetch=True)
-    if not rows:
-        return {"message": "if_account_exists_code_sent"}
-    code = f"{secrets.randbelow(900000) + 100000}"
-    _pending_verifications[f"forgot:{email}"] = {
-        "code": code,
-        "expires": time.time() + 600,
-    }
-    send_verification_email(email, code)
-    return {"message": "if_account_exists_code_sent"}
-
-
-@app.post("/api/v1/auth/forgot-reset")
-def forgot_reset(body: ForgotResetIn):
-    rate_limit(f"forgotreset:{body.email.lower()}", 5)
-    email = body.email.lower()
-    key = f"forgot:{email}"
-    pending = _pending_verifications.get(key)
-    if not pending:
-        raise HTTPException(400, "no_pending_verification")
-    if time.time() > pending["expires"]:
-        _pending_verifications.pop(key, None)
-        raise HTTPException(400, "code_expired")
-    if body.code != pending["code"]:
-        raise HTTPException(400, "invalid_code")
-    if not validate_password(body.new_password):
-        raise HTTPException(400, "weak_password")
-    _pending_verifications.pop(key, None)
-    rows = query("SELECT id FROM users WHERE email=?", (email,), fetch=True)
-    if not rows:
-        raise HTTPException(404, "unknown_email")
-    uid = rows[0]["id"]
-    query("UPDATE users SET pw_hash=? WHERE id=?", (hash_password(body.new_password), uid))
-    query("UPDATE sessions SET revoked=1 WHERE user_id=?", (uid,))
-    return {"message": "password_reset_ok", "token": issue_token(uid)}
 
 
 @app.post("/api/v1/auth/recover")

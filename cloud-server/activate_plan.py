@@ -20,9 +20,9 @@ from datetime import datetime, timedelta
 BASE = os.path.dirname(os.path.abspath(__file__))
 DB = os.path.join(BASE, "data", "taicloud.db")
 QUOTAS = {
-    "trial": 2 * 1024**3,
-    "basic": 15 * 1024**3,
-    "pro": 100 * 1024**3,
+    "trial": 1 * 1024**3,
+    "basic": 2 * 1024**3,
+    "pro": 5 * 1024**3,
 }
 DEFAULT_DAYS = 30
 

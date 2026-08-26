@@ -116,8 +116,29 @@ def api_signup(email: str, password: str) -> dict:
     return out
 
 
+def api_send_code(email: str, password: str) -> dict:
+    return _request("POST", "/auth/send-code", json_body={"email": email, "password": password}, auth=False)
+
+
+def api_verify_code(email: str, code: str) -> dict:
+    out = _request("POST", "/auth/verify-code", json_body={"email": email, "code": code}, auth=False)
+    set_session(out["token"], email)
+    return out
+
+
 def api_login(email: str, password: str) -> dict:
     out = _request("POST", "/auth/login", json_body={"email": email, "password": password}, auth=False)
+    set_session(out["token"], email)
+    return out
+
+
+def api_forgot_send(email: str) -> dict:
+    return _request("POST", "/auth/forgot-send", json_body={"email": email}, auth=False)
+
+
+def api_forgot_reset(email: str, code: str, new_password: str) -> dict:
+    out = _request("POST", "/auth/forgot-reset",
+                   json_body={"email": email, "code": code, "new_password": new_password}, auth=False)
     set_session(out["token"], email)
     return out
 
@@ -135,6 +156,10 @@ def api_recover(email: str, recovery_key: str, new_password: str) -> dict:
 
 def api_me() -> dict:
     return _request("GET", "/me")
+
+
+def api_my_files() -> dict:
+    return _request("GET", "/me/files")
 
 
 def api_upload_part(blob: bytes) -> dict:

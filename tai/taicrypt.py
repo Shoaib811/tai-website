@@ -111,6 +111,41 @@ def change_password(old_password: str, new_password: str) -> bool:
     return True
 
 
+def setup_app_lock(password: str) -> None:
+    salt = secrets.token_bytes(16)
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, PBKDF2_ITERATIONS)
+    lock = {"salt": salt.hex(), "hash": dk.hex()}
+    if os.path.exists(CONFIG_PATH):
+        with open(CONFIG_PATH, "r", encoding="utf-8") as fh:
+            config = json.load(fh)
+    else:
+        config = {}
+    config["app_lock"] = lock
+    with open(CONFIG_PATH, "w", encoding="utf-8") as fh:
+        json.dump(config, fh, indent=2)
+
+
+def verify_app_lock(password: str) -> bool:
+    if not os.path.exists(CONFIG_PATH):
+        return False
+    with open(CONFIG_PATH, "r", encoding="utf-8") as fh:
+        config = json.load(fh)
+    lock = config.get("app_lock")
+    if not lock:
+        return False
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode(),
+                              bytes.fromhex(lock["salt"]), PBKDF2_ITERATIONS)
+    return secrets.compare_digest(dk.hex(), lock["hash"])
+
+
+def has_app_lock() -> bool:
+    if not os.path.exists(CONFIG_PATH):
+        return False
+    with open(CONFIG_PATH, "r", encoding="utf-8") as fh:
+        config = json.load(fh)
+    return "app_lock" in config
+
+
 def tai_xor_stream(data: bytes, context: str, key: bytes) -> bytes:
     stream = bytearray()
     counter = 0
