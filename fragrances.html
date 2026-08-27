@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CODE99 Fragrances — Scents That Define You</title>
+<meta name="description" content="Premium fragrances by CODE99. Crafted for those who demand excellence.">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --card: #161616;
+    --border: #222222;
+    --fg: #f5f0eb;
+    --muted: #777;
+    --gold: #c8a97e;
+    --gold-dim: rgba(200,169,126,0.15);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; width: 100%; z-index: 100;
+    background: rgba(10,10,10,0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 32px;
+  }
+  .nav-logo {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px; font-weight: 700;
+    letter-spacing: 0.2em; color: var(--fg);
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--gold); }
+  .nav-links { display: flex; gap: 32px; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 120px 32px 80px;
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: 20%; left: 50%;
+    transform: translateX(-50%);
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(200,169,126,0.08) 0%, transparent 70%);
+  }
+  .hero-badge {
+    display: inline-block;
+    font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--gold); border: 1px solid rgba(200,169,126,0.3);
+    padding: 8px 20px; border-radius: 999px;
+    margin-bottom: 32px;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(42px, 8vw, 80px);
+    line-height: 1.05; margin-bottom: 24px;
+    font-weight: 400;
+  }
+  .hero h1 em { font-style: italic; color: var(--gold); }
+  .hero p.sub {
+    color: var(--muted); font-size: clamp(15px, 2vw, 18px);
+    max-width: 520px; margin: 0 auto 48px;
+    line-height: 1.7;
+  }
+  .cta-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    padding: 16px 40px; border-radius: 8px; font-size: 14px;
+    font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    text-decoration: none; transition: all 0.3s;
+  }
+  .btn-gold { background: var(--gold); color: #0a0a0a; }
+  .btn-gold:hover { background: #d4b88a; transform: translateY(-2px); }
+  .btn-outline {
+    background: transparent; color: var(--fg);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* BRANDS MARQUEE */
+  .marquee-section {
+    padding: 60px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .marquee-label {
+    text-align: center; font-size: 11px; letter-spacing: 0.3em;
+    color: var(--muted); text-transform: uppercase; margin-bottom: 30px;
+  }
+  .marquee {
+    display: flex; gap: 60px;
+    animation: scroll 20s linear infinite;
+    white-space: nowrap;
+  }
+  .marquee span {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; color: rgba(255,255,255,0.08);
+    font-style: italic; flex-shrink: 0;
+  }
+  @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* PRODUCTS */
+  .products { padding: 100px 32px; max-width: 1200px; margin: 0 auto; }
+  .section-header { text-align: center; margin-bottom: 60px; }
+  .section-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 42px); font-weight: 400;
+    margin-bottom: 12px;
+  }
+  .section-header p { color: var(--muted); font-size: 15px; }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+  }
+  .product-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px 28px 32px;
+    text-align: center;
+    transition: all 0.4s;
+    position: relative;
+    overflow: hidden;
+  }
+  .product-card:hover {
+    border-color: rgba(200,169,126,0.3);
+    transform: translateY(-6px);
+  }
+  .product-card .coming-soon {
+    position: absolute; top: 16px; right: 16px;
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--gold); border: 1px solid rgba(200,169,126,0.3);
+    padding: 4px 12px; border-radius: 999px;
+  }
+  .product-icon {
+    font-size: 64px; margin-bottom: 20px;
+    filter: grayscale(0.1);
+    transition: transform 0.4s;
+  }
+  .product-card:hover .product-icon { transform: scale(1.1) rotate(-3deg); }
+  .product-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; margin-bottom: 6px; font-weight: 400;
+  }
+  .product-card .notes {
+    font-size: 12px; color: var(--gold); letter-spacing: 0.1em;
+    margin-bottom: 14px; text-transform: uppercase;
+  }
+  .product-card p {
+    color: var(--muted); font-size: 14px; line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .product-card .price {
+    font-family: 'Inter', sans-serif;
+    font-size: 20px; font-weight: 700; color: var(--fg);
+    margin-bottom: 20px;
+  }
+  .btn-product {
+    display: block; width: 100%; padding: 12px;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: transparent; color: var(--muted);
+    font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: not-allowed; transition: all 0.3s;
+  }
+
+  /* ABOUT */
+  .about {
+    padding: 100px 32px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .about-inner {
+    max-width: 800px; margin: 0 auto; text-align: center;
+  }
+  .about-inner h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 42px); font-weight: 400;
+    margin-bottom: 24px;
+  }
+  .about-inner p {
+    color: var(--muted); font-size: 16px; line-height: 1.8;
+    margin-bottom: 16px;
+  }
+  .about-inner .highlight { color: var(--gold); font-weight: 600; }
+
+  .values-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 32px; margin-top: 60px; text-align: center;
+  }
+  .value h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; font-weight: 400; margin-bottom: 8px;
+  }
+  .value p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* NEWSLETTER */
+  .newsletter {
+    padding: 80px 32px; text-align: center;
+  }
+  .newsletter h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px; font-weight: 400; margin-bottom: 12px;
+  }
+  .newsletter p { color: var(--muted); margin-bottom: 32px; }
+  .newsletter-form {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    max-width: 500px; margin: 0 auto;
+  }
+  .newsletter-form input {
+    flex: 1; min-width: 240px;
+    padding: 14px 20px; border-radius: 8px;
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--fg); font-size: 14px; outline: none;
+  }
+  .newsletter-form input:focus { border-color: var(--gold); }
+  .newsletter-form button {
+    padding: 14px 28px; border-radius: 8px;
+    background: var(--gold); color: #0a0a0a;
+    border: none; font-weight: 700; font-size: 13px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.3s;
+  }
+  .newsletter-form button:hover { background: #d4b88a; }
+
+  /* FOOTER */
+  footer {
+    padding: 50px 32px 30px;
+    border-top: 1px solid var(--border);
+  }
+  .foot-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; justify-content: space-between;
+    flex-wrap: wrap; gap: 20px;
+  }
+  .foot-col h5 {
+    font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 16px;
+  }
+  .foot-col a {
+    display: block; color: var(--muted); text-decoration: none;
+    font-size: 14px; margin-bottom: 8px; transition: color 0.2s;
+  }
+  .foot-col a:hover { color: var(--gold); }
+  .foot-bottom {
+    max-width: 1200px; margin: 30px auto 0;
+    padding-top: 20px; border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    color: var(--muted); font-size: 12px;
+  }
+  .foot-bottom a { color: var(--muted); text-decoration: none; }
+  .foot-bottom a:hover { color: var(--gold); }
+
+  @media (max-width: 600px) {
+    .values-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">CODE<span>99</span></a>
+    <div class="nav-links">
+      <a href="#collection">Collection</a>
+      <a href="#about">Our Story</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div>
+    <div class="hero-badge">Coming Soon</div>
+    <h1>Scents That<br><em>Define</em> You</h1>
+    <p class="sub">
+      Premium fragrances crafted for those who refuse to blend in.
+      Every bottle tells a story. Every spray leaves a mark.
+    </p>
+    <div class="cta-row">
+      <a href="#collection" class="btn btn-gold">Explore Collection</a>
+      <a href="#about" class="btn btn-outline">Our Story</a>
+    </div>
+  </div>
+</section>
+
+<div class="marquee-section">
+  <div class="marquee-label">Inspired by the world's finest</div>
+  <div class="marquee">
+    <span>Oud</span><span>Saffron</span><span>Amber</span><span>Musk</span>
+    <span>Sandalwood</span><span>Cedarwood</span><span>Vanilla</span><span>Patchouli</span>
+    <span>Bergamot</span><span>Jasmine</span><span>Rose</span><span>Leather</span>
+    <span>Oud</span><span>Saffron</span><span>Amber</span><span>Musk</span>
+    <span>Sandalwood</span><span>Cedarwood</span><span>Vanilla</span><span>Patchouli</span>
+    <span>Bergamot</span><span>Jasmine</span><span>Rose</span><span>Leather</span>
+  </div>
+</div>
+
+<section class="products" id="collection">
+  <div class="section-header">
+    <h2>The Collection</h2>
+    <p>Three signatures. Three personalities.</p>
+  </div>
+  <div class="product-grid">
+
+    <div class="product-card">
+      <span class="coming-soon">Coming Soon</span>
+      <div class="product-icon">🌿</div>
+      <h3>NOIR OUD</h3>
+      <div class="notes">Oud &bull; Leather &bull; Amber</div>
+      <p>Dark, bold, unforgettable. For the one who commands every room.</p>
+      <div class="price">Rs 2,500</div>
+      <div class="btn-product">Notify Me</div>
+    </div>
+
+    <div class="product-card">
+      <span class="coming-soon">Coming Soon</span>
+      <div class="product-icon">🌸</div>
+      <h3>VELVET ROSE</h3>
+      <div class="notes">Rose &bull; Saffron &bull; Musk</div>
+      <p>Elegant, warm, magnetic. For the one who leaves them wanting more.</p>
+      <div class="price">Rs 2,500</div>
+      <div class="btn-product">Notify Me</div>
+    </div>
+
+    <div class="product-card">
+      <span class="coming-soon">Coming Soon</span>
+      <div class="product-icon">🍊</div>
+      <h3>CITRUS BLVD</h3>
+      <div class="notes">Bergamot &bull; Cedar &bull; Vanilla</div>
+      <p>Fresh, sharp, confident. For the one who owns the daytime.</p>
+      <div class="price">Rs 2,500</div>
+      <div class="btn-product">Notify Me</div>
+    </div>
+
+  </div>
+</section>
+
+<section class="about" id="about">
+  <div class="about-inner">
+    <h2>Why CODE99 Fragrances?</h2>
+    <p>
+      We don't follow trends. We set them. Every CODE99 fragrance is
+      <span class="highlight">crafted with imported essential oils</span>,
+      tested for longevity, and designed to make you unforgettable.
+    </p>
+    <p>
+      From the first spray to the last trace on your collar —
+      CODE99 doesn't just smell good. It <span class="highlight">feels powerful</span>.
+    </p>
+    <div class="values-grid">
+      <div class="value">
+        <h4>Imported Oils</h4>
+        <p>Premium-grade essential oils sourced from the world's best suppliers.</p>
+      </div>
+      <div class="value">
+        <h4>12hr+ Longevity</h4>
+        <p>Engineered to last from morning meetings to midnight plans.</p>
+      </div>
+      <div class="value">
+        <h4>Pakistan Made</h4>
+        <p>Crafted locally with global standards. Proudly Pakistani.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="newsletter" id="contact">
+  <h2>Be the First to Know</h2>
+  <p>Drop your email. We'll notify you when we launch.</p>
+  <div class="newsletter-form">
+    <input type="email" placeholder="your@email.com" id="email-input">
+    <button onclick="subscribe()">Notify Me</button>
+  </div>
+  <p id="sub-msg" style="margin-top:16px; color:var(--gold); font-size:14px; display:none;"></p>
+</section>
+
+<footer>
+  <div class="foot-inner">
+    <div class="foot-col">
+      <h5>CODE99</h5>
+      <a href="index.html">Home</a>
+      <a href="software.html">Software</a>
+      <a href="#">Fragrances</a>
+    </div>
+    <div class="foot-col">
+      <h5>Support</h5>
+      <a href="mailto:info@code99.pk">info@code99.pk</a>
+      <a href="https://wa.me/923210790790">WhatsApp</a>
+    </div>
+    <div class="foot-col">
+      <h5>Legal</h5>
+      <a href="#">Terms</a>
+      <a href="#">Privacy</a>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>&copy; 2026 CODE99 Fragrances</span>
+    <span>Made in Pakistan 🇵🇰</span>
+  </div>
+</footer>
+
+<script>
+function subscribe() {
+  const email = document.getElementById('email-input').value;
+  const msg = document.getElementById('sub-msg');
+  if (!email || !email.includes('@')) {
+    msg.style.display = 'block';
+    msg.style.color = '#f85149';
+    msg.textContent = 'Valid email daalo!';
+    return;
+  }
+  msg.style.display = 'block';
+  msg.style.color = 'var(--gold)';
+  msg.textContent = '✓ Thanks! We\'ll notify you at launch.';
+  document.getElementById('email-input').value = '';
+}
+</script>
+
+</body>
+</html>
