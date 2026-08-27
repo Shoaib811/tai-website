@@ -270,7 +270,7 @@
 'use strict';
 const API = 'https://api.code99.pk/api/v1';
 let token = localStorage.getItem('tai_token') || null;
-let state = { email: null, plan: 'trial', quota: 1073741824, used: 0, mappings: {} };
+let state = { email: null, plan: 'trial', quota: 1073741824, used: 0, mappings: {}, cryptoPass: null };
 
 /* ---------- Service Worker ---------- */
 if ('serviceWorker' in navigator) {
@@ -408,6 +408,7 @@ async function doLogout() {
 }
 function logout() {
   token = null; localStorage.removeItem('tai_token');
+  clearCryptoPass();
   $('bottom-nav').style.display='none';
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('screen-auth').classList.add('active');
@@ -677,11 +678,16 @@ async function decryptBytes(bytes) {
   return new Uint8Array(dec);
 }
 async function promptForPass() {
+  // Cache password for this session so multi-part files ask only once
+  if (state.cryptoPass) return state.cryptoPass;
   return new Promise((res)=>{
-    const pw = prompt('Enter your TAI crypto password:');
+    const pw = prompt('Enter your TAI crypto password (used to encrypt/decrypt):');
+    state.cryptoPass = pw || null;
     res(pw || null);
   });
 }
+
+function clearCryptoPass() { state.cryptoPass = null; }
 
 /* ---------- Init ---------- */
 (async function init(){
