@@ -352,6 +352,7 @@ async function doLogin() {
   try {
     const res = await api('/auth/login','POST',{email,password:pw});
     token = res.token; localStorage.setItem('tai_token', token);
+    await setCryptoFromLogin(email, pw);
     await loadMe(); enterApp();
   } catch(e) { $('login-msg').textContent = e.message; $('login-msg').className='msg err'; }
 }
@@ -380,11 +381,13 @@ async function verifyCode() {
     if (ctx === 'signup') {
       const res = await api('/auth/verify-code','POST',{email:pendingSignup.email, code});
       token = res.token; localStorage.setItem('tai_token',token);
+      await setCryptoFromLogin(pendingSignup.email, pendingSignup.password);
       closeModal('modal-code');
       await loadMe(); enterApp();
     } else if (ctx === 'forgot') {
       const res = await api('/auth/forgot-reset','POST',{email:pendingForgot.email, code, new_password:pendingForgot.password});
       token = res.token; localStorage.setItem('tai_token', token);
+      await setCryptoFromLogin(pendingForgot.email, pendingForgot.password);
       closeModal('modal-code');
       await loadMe(); enterApp();
     }
@@ -408,6 +411,7 @@ async function doLogout() {
 }
 function logout() {
   token = null; localStorage.removeItem('tai_token');
+  _cryptoKey = null; _cryptoEmail = null;
   $('bottom-nav').style.display='none';
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('screen-auth').classList.add('active');
@@ -647,29 +651,32 @@ async function startDownload() {
   }
 }
 
-/* ---------- WEB CRYPTO (AES-256-GCM — AUTO DEVICE KEY) ---------- */
-// Key auto-generate hota hai (desktop ke _ensure_key_auto jaisa), localStorage mein save.
-// Koi password prompt nahi — upload/download sab automatic. Files isi device pe decrypt ho sakti hain.
-const enc = new TextEncoder();
-let _devKey = null;
+/* ---------- WEB CRYPTO (AES-256-GCM — derived from LOGIN PASSWORD) ---------- */
+// Key login password + email se derive hota hai (PBKDF2). Koi extra prompt nahi —
+// bas login karo, files upload/download automatic encrypt/decrypt hoti hain.
+// Files kisi bhi device pe khulengi jahan same login password diya jaye (zero-knowledge).
+let _cryptoKey = null;
+let _cryptoEmail = null;
+const _enc = new TextEncoder();
 
-async function getDeviceKey() {
-  if (_devKey) return _devKey;
-  let stored = localStorage.getItem('tai_dev_key');
-  if (stored) {
-    // stored = base64(raw 32-byte key material)
-    const raw = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
-    _devKey = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt','decrypt']);
-    return _devKey;
-  }
-  const raw = crypto.getRandomValues(new Uint8Array(32));
-  localStorage.setItem('tai_dev_key', btoa(String.fromCharCode(...raw)));
-  _devKey = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt','decrypt']);
-  return _devKey;
+async function setCryptoFromLogin(email, password) {
+  _cryptoKey = null;
+  _cryptoEmail = email;
+  const salt = _enc.encode('TAI:' + email.trim().toLowerCase());
+  const base = await crypto.subtle.importKey('raw', _enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  _cryptoKey = await crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt, iterations:600000, hash:'SHA-256' },
+    base, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
+  );
+}
+async function getCryptoKey() {
+  if (_cryptoKey) return _cryptoKey;
+  // Session expired ya fresh load — token hai but key nahi. Files decrypt nahi ho sakti bina password.
+  throw new Error('Login password required kyunki key usi se banti hai. Dobara login karo.');
 }
 
 async function encryptBytes(bytes) {
-  const key = await getDeviceKey();
+  const key = await getCryptoKey();
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encData = await crypto.subtle.encrypt({name:'AES-GCM',iv}, key, bytes);
   const iv2 = new Uint8Array(iv); const enc2 = new Uint8Array(encData);
@@ -680,23 +687,22 @@ async function encryptBytes(bytes) {
 }
 async function decryptBytes(bytes) {
   const ver=bytes[0]; const iv=bytes.slice(1,13); const ct=bytes.slice(13);
+  const key = await getCryptoKey();
   try {
-    const key = await getDeviceKey();
     const dec = await crypto.subtle.decrypt({name:'AES-GCM',iv}, key, ct);
     return new Uint8Array(dec);
   } catch(e) {
-    throw new Error('Decrypt fail: device key issue. (App dobara install karo ya same device pe karo — files isi device pe dekhti hain.)');
+    throw new Error('Decrypt fail: data corrupt ya login password galat session. Dobara login karke try karo.');
   }
 }
 
 /* ---------- Init ---------- */
 (async function init(){
-  if (token) {
-    try { await loadMe(); enterApp(); return; }
-    catch(e) { logout(); }
-  }
+  // Key login password se banta hai (memory mein). Naye page/session pe password nahi hota —
+  // isliye hamesha login screen dikhao taaki crypto key bane. Token sirf auto-login nahi karta bina key ke.
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('screen-auth').classList.add('active');
+  if (token && !$('login-email').value) { $('login-email').value = state.email || ''; }
 })();
 </script>
 </body>
