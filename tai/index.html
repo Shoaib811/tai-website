@@ -270,7 +270,7 @@
 'use strict';
 const API = 'https://api.code99.pk/api/v1';
 let token = localStorage.getItem('tai_token') || null;
-let state = { email: null, plan: 'trial', quota: 1073741824, used: 0, mappings: {}, cryptoPass: null };
+let state = { email: null, plan: 'trial', quota: 1073741824, used: 0, mappings: {} };
 
 /* ---------- Service Worker ---------- */
 if ('serviceWorker' in navigator) {
@@ -408,7 +408,6 @@ async function doLogout() {
 }
 function logout() {
   token = null; localStorage.removeItem('tai_token');
-  clearCryptoPass();
   $('bottom-nav').style.display='none';
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('screen-auth').classList.add('active');
@@ -648,50 +647,47 @@ async function startDownload() {
   }
 }
 
-/* ---------- WEB CRYPTO (AES-256-GCM + PBKDF2 600k) ---------- */
-// IMPORTANT: Uses a device-generated key stored per account, encrypted by PBKDF2.
+/* ---------- WEB CRYPTO (AES-256-GCM — AUTO DEVICE KEY) ---------- */
+// Key auto-generate hota hai (desktop ke _ensure_key_auto jaisa), localStorage mein save.
+// Koi password prompt nahi — upload/download sab automatic. Files isi device pe decrypt ho sakti hain.
 const enc = new TextEncoder();
-async function getKeyFromPassword(pw, salt) {
-  const base = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey(
-    { name:'PBKDF2', salt:salt, iterations:600000, hash:'SHA-256' },
-    base, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
-  );
+let _devKey = null;
+
+async function getDeviceKey() {
+  if (_devKey) return _devKey;
+  let stored = localStorage.getItem('tai_dev_key');
+  if (stored) {
+    // stored = base64(raw 32-byte key material)
+    const raw = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+    _devKey = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt','decrypt']);
+    return _devKey;
+  }
+  const raw = crypto.getRandomValues(new Uint8Array(32));
+  localStorage.setItem('tai_dev_key', btoa(String.fromCharCode(...raw)));
+  _devKey = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt','decrypt']);
+  return _devKey;
 }
+
 async function encryptBytes(bytes) {
-  const pw = await promptForPass(); if (!pw) throw new Error('Cancelled');
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const key = await getKeyFromPassword(pw, salt);
+  const key = await getDeviceKey();
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encData = await crypto.subtle.encrypt({name:'AES-GCM',iv}, key, bytes);
   const iv2 = new Uint8Array(iv); const enc2 = new Uint8Array(encData);
-  const out = new Uint8Array(4 + salt.length + iv2.length + enc2.length);
+  const out = new Uint8Array(1 + iv2.length + enc2.length);
   out[0]=1; // version
-  out.set(salt,1); out.set(iv2,1+salt.length); out.set(enc2,1+salt.length+iv2.length);
+  out.set(iv2,1); out.set(enc2,1+iv2.length);
   return out;
 }
 async function decryptBytes(bytes) {
-  const pw = await promptForPass(); if (!pw) throw new Error('Cancelled');
-  const ver=bytes[0]; const salt=bytes.slice(1,17); const iv=bytes.slice(17,29); const ct=bytes.slice(29);
+  const ver=bytes[0]; const iv=bytes.slice(1,13); const ct=bytes.slice(13);
   try {
-    const key = await getKeyFromPassword(pw, salt);
+    const key = await getDeviceKey();
     const dec = await crypto.subtle.decrypt({name:'AES-GCM',iv}, key, ct);
     return new Uint8Array(dec);
   } catch(e) {
-    throw new Error('Decrypt fail: password galat hai ya data corrupt. (Wohi password use karo jo upload ke waqt diya tha.)');
+    throw new Error('Decrypt fail: device key issue. (App dobara install karo ya same device pe karo — files isi device pe dekhti hain.)');
   }
 }
-async function promptForPass() {
-  // Cache password for this session so multi-part files ask only once
-  if (state.cryptoPass) return state.cryptoPass;
-  return new Promise((res)=>{
-    const pw = prompt('Enter your TAI crypto password (used to encrypt/decrypt):');
-    state.cryptoPass = pw || null;
-    res(pw || null);
-  });
-}
-
-function clearCryptoPass() { state.cryptoPass = null; }
 
 /* ---------- Init ---------- */
 (async function init(){
