@@ -214,8 +214,12 @@
   <div class="modal" id="modal-upload">
     <div class="sheet">
       <h3>⬆️ Upload File (Encrypted)</h3>
-      <input type="file" id="upload-file-input">
-      <div class="field" style="margin-top:12px;"><label>This file will be encrypted (AES-256-GCM) and sharded on YOUR device, then stored across the cloud.</label></div>
+      <input type="file" id="upload-file-input" style="display:none;" onchange="onFileChosen()">
+      <label for="upload-file-input" id="file-chooser" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:32px 16px; background:var(--card); border:1px dashed var(--border); border-radius:12px; cursor:pointer; margin-bottom:14px;">
+        <span style="font-size:40px;">📁</span>
+        <span id="file-chooser-text" style="color:var(--muted); font-size:13px; text-align:center;"><b style="color:var(--accent);">Choose File</b><br>Gallery ya files se select karo</span>
+      </label>
+      <div class="field"><label>File aapke device pe AES-256-GCM se encrypt hoga, shard hoga, phir cloud pe store hoga.</label></div>
       <button class="btn-main" onclick="startUpload()">Encrypt &amp; Upload</button>
       <div class="progress-wrap">
         <div class="progress-bar"><div class="progress-fill" id="upload-progress"></div></div>
@@ -505,10 +509,14 @@ function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/
 
 /* ---------- Upload ---------- */
 let uploadBuf = null, uploadName = '';
-function showUpload() { $('modal-upload').classList.add('active'); $('upload-msg').textContent=''; $('upload-progress').style.width='0%'; $('upload-status').textContent='Ready'; }
+function showUpload() { $('modal-upload').classList.add('active'); $('upload-msg').textContent=''; $('upload-progress').style.width='0%'; $('upload-status').textContent='Ready'; $('file-chooser-text').innerHTML='<b style="color:var(--accent);">Choose File</b><br>Gallery ya files se select karo'; }
+function onFileChosen() {
+  const f = $('upload-file-input').files[0];
+  if (f) $('file-chooser-text').innerHTML = '<b style="color:var(--fg); word-break:break-all;">' + esc(f.name) + '</b><br><span style="font-size:12px;color:var(--muted);">' + fmt(f.size) + ' &middot; click Encrypt &amp; Upload</span>';
+}
 function startUpload() {
   const f = $('upload-file-input').files[0];
-  if (!f) { $('upload-msg').textContent='Pehle file select karo'; return; }
+  if (!f) { $('upload-msg').textContent='Pehle file choose karo (📁 button)'; return; }
   $('upload-msg').textContent='';
   const reader = new FileReader();
   reader.onload = () => processUpload(reader.result, f.name);
@@ -550,6 +558,16 @@ async function processUpload(data, origName) {
   }
 }
 
+async function downloadFile(origName) {
+  dlName = origName;
+  $('modal-download').classList.add('active');
+  $('dl-result').style.display='none';
+  $('dl-msg').textContent='';
+  $('dl-progress').style.width='0%';
+  $('dl-status').textContent='Ready';
+  await startDownload();
+}
+
 /* ---------- Download ---------- */
 let dlName = null;
 function showDownload() {
@@ -569,8 +587,11 @@ function showDownload() {
 async function startDownload() {
   if (!dlName) return;
   const entry = state.mappings[dlName];
-  const parts = entry.parts || [];
+  const parts = (entry && entry.parts) || [];
+  if (!parts.length) { $('dl-msg').textContent='No parts for this file'; return; }
   try {
+    $('dl-status').textContent='Downloading & decrypting...';
+    $('dl-msg').textContent='';
     const chunks = [];
     for (let i=0;i<parts.length;i++) {
       $('dl-status').textContent='Downloading part '+(i+1)+'/'+parts.length;
@@ -584,14 +605,31 @@ async function startDownload() {
     const out = new Uint8Array(total);
     let off=0; chunks.forEach(c=>{out.set(c,off); off+=c.byteLength;});
     const blob = new Blob([out]);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href=url; a.download=dlName; a.click();
+    const fileName = dlName.split('/').pop();
+    // Mobile-friendly download
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      const fileURL = URL.createObjectURL(blob);
+      const w = window.open(fileURL, '_blank');
+      if (!w) {
+        // fallback: show result and let user long-press
+        $('dl-result').style.display='block';
+        const a=document.createElement('a'); a.href=fileURL; a.download=fileName;
+        a.textContent='⬇️ '+fileName+' (tap to save)'; a.style.color='var(--accent)'; a.style.fontWeight='700';
+        $('dl-result').innerHTML=''; $('dl-result').appendChild(a);
+      }
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href=url; a.download=fileName; document.body.appendChild(a); a.click();
+      setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},500);
+    }
     $('dl-progress').style.width='100%';
     $('dl-status').textContent='Done! File saved.';
     $('dl-msg').className='msg ok';
-    $('dl-msg').textContent='✓ '+dlName+' restored & decrypted. Cloud se delete kar diya?';
-    const del = confirm('Semantic beh — cloud se bhi delete karna hai? (File restore hone ke baad)');
+    $('dl-msg').textContent='✓ '+fileName+' restored & decrypted.';
+    toast('✓ '+fileName+' downloaded');
+    const del = confirm('Cloud se bhi delete karna hai? (Restore ke baad)');
     if (del) {
       for (const p of parts) { try{ await api('/parts/'+p.id,'DELETE'); }catch(e){} }
       delete state.mappings[dlName];
@@ -600,7 +638,7 @@ async function startDownload() {
       state.used -= parts.reduce((a,p)=>a+p.size,0);
       sessionStorage_buzz(); loadMyFiles(); toast('Deleted from cloud');
     }
-    setTimeout(()=>closeModal('modal-download'),2000);
+    setTimeout(()=>closeModal('modal-download'),2500);
   } catch(e) {
     $('dl-msg').textContent='Error: '+e.message;
     $('dl-msg').className='msg err';
