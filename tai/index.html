@@ -215,11 +215,12 @@
     <div class="sheet">
       <h3>⬆️ Upload File (Encrypted)</h3>
       <input type="file" id="upload-file-input" style="display:none;" onchange="onFileChosen()">
-      <label for="upload-file-input" id="file-chooser" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:32px 16px; background:var(--card); border:1px dashed var(--border); border-radius:12px; cursor:pointer; margin-bottom:14px;">
+      <label for="upload-file-input" id="file-chooser" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:32px 16px; background:var(--card); border:1px dashed var(--border); border-radius:12px; cursor:pointer; margin-bottom:8px;">
         <span style="font-size:40px;">📁</span>
         <span id="file-chooser-text" style="color:var(--muted); font-size:13px; text-align:center;"><b style="color:var(--accent);">Choose File</b><br>Gallery ya files se select karo</span>
       </label>
-      <div class="field"><label>File aapke device pe AES-256-GCM se encrypt hoga, shard hoga, phir cloud pe store hoga.</label></div>
+      <button class="btn-main" id="cancel-upload-btn" style="display:none; background:var(--danger); color:#fff;" onclick="cancelUpload()">✕ Cancel Selected File</button>
+      <div class="field" style="margin-top:12px;"><label>File aapke device pe AES-256-GCM se encrypt hoga, shard hoga, phir cloud pe store hoga.</label></div>
       <button class="btn-main" onclick="startUpload()">Encrypt &amp; Upload</button>
       <div class="progress-wrap">
         <div class="progress-bar"><div class="progress-fill" id="upload-progress"></div></div>
@@ -232,8 +233,8 @@
   <!-- DOWNLOAD MODAL -->
   <div class="modal" id="modal-download">
     <div class="sheet">
-      <h3>⬇️ Download a File</h3>
-      <button class="btn-main" onclick="startDownload()" style="background:var(--blue);color:#fff;">Download &amp; Decrypt My Files</button>
+      <h3>⬇️ Download All Files</h3>
+      <button class="btn-main" onclick="startDownload()" style="background:var(--blue);color:#fff;">⬇️ Download All Files</button>
       <div class="progress-wrap">
         <div class="progress-bar"><div class="progress-fill" id="dl-progress"></div></div>
         <div class="progress-txt" id="dl-status">Ready</div>
@@ -515,10 +516,21 @@ function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/
 
 /* ---------- Upload ---------- */
 let uploadBuf = null, uploadName = '';
-function showUpload() { $('modal-upload').classList.add('active'); $('upload-msg').textContent=''; $('upload-progress').style.width='0%'; $('upload-status').textContent='Ready'; $('file-chooser-text').innerHTML='<b style="color:var(--accent);">Choose File</b><br>Gallery ya files se select karo'; }
+function showUpload() { $('modal-upload').classList.add('active'); $('upload-msg').textContent=''; $('upload-progress').style.width='0%'; $('upload-status').textContent='Ready'; $('upload-file-input').value=''; $('cancel-upload-btn').style.display='none'; $('file-chooser-text').innerHTML='<b style="color:var(--accent);">Choose File</b><br>Gallery ya files se select karo'; }
 function onFileChosen() {
   const f = $('upload-file-input').files[0];
-  if (f) $('file-chooser-text').innerHTML = '<b style="color:var(--fg); word-break:break-all;">' + esc(f.name) + '</b><br><span style="font-size:12px;color:var(--muted);">' + fmt(f.size) + ' &middot; click Encrypt &amp; Upload</span>';
+  if (f) {
+    $('file-chooser-text').innerHTML = '<b style="color:var(--fg); word-break:break-all;">' + esc(f.name) + '</b><br><span style="font-size:12px;color:var(--muted);">' + fmt(f.size) + ' &middot; click Encrypt &amp; Upload</span>';
+    $('cancel-upload-btn').style.display = 'block';
+  }
+}
+function cancelUpload() {
+  $('upload-file-input').value='';
+  $('cancel-upload-btn').style.display='none';
+  $('upload-msg').textContent='';
+  $('upload-status').textContent='Ready';
+  $('upload-progress').style.width='0%';
+  $('file-chooser-text').innerHTML='<b style="color:var(--accent);">Choose File</b><br>Gallery ya files se select karo';
 }
 function startUpload() {
   const f = $('upload-file-input').files[0];
@@ -565,13 +577,42 @@ async function processUpload(data, origName) {
 }
 
 async function downloadFile(origName) {
-  dlName = origName;
-  $('modal-download').classList.add('active');
+  // Single file restore (Restore button)
+  const entry = state.mappings[origName];
+  const parts = (entry && entry.parts) || [];
+  if (!parts.length) { toast('No parts'); return; }
   $('dl-result').style.display='none';
-  $('dl-msg').textContent='';
-  $('dl-progress').style.width='0%';
-  $('dl-status').textContent='Ready';
-  await startDownload();
+  try {
+    const chunks = [];
+    for (let i=0;i<parts.length;i++) {
+      const buf = await api('/parts/'+parts[i].id,'GET',null,true);
+      const bytes = new Uint8Array(buf);
+      const dec = await decryptBytes(bytes);
+      chunks.push(dec);
+    }
+    const total = chunks.reduce((a,c)=>a+c.byteLength,0);
+    const out = new Uint8Array(total);
+    let off=0; chunks.forEach(c=>{out.set(c,off); off+=c.byteLength;});
+    const blob = new Blob([out]);
+    const fileName = origName.split('/').pop();
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      const fileURL = URL.createObjectURL(blob);
+      $('dl-result').style.display='block';
+      $('dl-result').innerHTML='';
+      const a=document.createElement('a'); a.href=fileURL; a.download=fileName;
+      a.textContent='⬇️ '+fileName+' (tap to save)'; a.style.color='var(--accent)'; a.style.fontWeight='700'; a.style.display='block'; a.style.margin='6px 0';
+      $('dl-result').appendChild(a);
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href=url; a.download=fileName; document.body.appendChild(a); a.click();
+      setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},500);
+    }
+    toast('✓ '+fileName+' downloaded');
+  } catch(e) {
+    toast('Error: '+e.message);
+  }
 }
 
 /* ---------- Download ---------- */
@@ -579,11 +620,7 @@ let dlName = null;
 function showDownload() {
   const names = Object.keys(state.mappings);
   if (!names.length) { toast('No files to download'); return; }
-  const pick = prompt('Enter file name (from My Files):', names[0]);
-  if (!pick) return;
-  const entry = state.mappings[pick];
-  if (!entry) { toast('File nahi mili'); return; }
-  dlName = pick;
+  dlName = null;
   $('modal-download').classList.add('active');
   $('dl-result').style.display='none';
   $('dl-msg').textContent='';
@@ -591,64 +628,55 @@ function showDownload() {
   $('dl-status').textContent='Ready';
 }
 async function startDownload() {
-  if (!dlName) return;
-  const entry = state.mappings[dlName];
-  const parts = (entry && entry.parts) || [];
-  if (!parts.length) { $('dl-msg').textContent='No parts for this file'; return; }
-  try {
-    $('dl-status').textContent='Downloading & decrypting...';
-    $('dl-msg').textContent='';
-    const chunks = [];
-    for (let i=0;i<parts.length;i++) {
-      $('dl-status').textContent='Downloading part '+(i+1)+'/'+parts.length;
-      const buf = await api('/parts/'+parts[i].id,'GET',null,true);
-      const bytes = new Uint8Array(buf);
-      const dec = await decryptBytes(bytes);
-      chunks.push(dec);
-      $('dl-progress').style.width=Math.round(((i+1)/parts.length)*100)+'%';
-    }
-    const total = chunks.reduce((a,c)=>a+c.byteLength,0);
-    const out = new Uint8Array(total);
-    let off=0; chunks.forEach(c=>{out.set(c,off); off+=c.byteLength;});
-    const blob = new Blob([out]);
-    const fileName = dlName.split('/').pop();
-    // Mobile-friendly download
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (isIOS) {
-      const fileURL = URL.createObjectURL(blob);
-      const w = window.open(fileURL, '_blank');
-      if (!w) {
-        // fallback: show result and let user long-press
+  // Download ALL files in one click
+  const names = Object.keys(state.mappings);
+  if (!names.length) { $('dl-msg').textContent='No files'; return; }
+  $('dl-msg').textContent='';
+  let done = 0;
+  for (const name of names) {
+    const entry = state.mappings[name];
+    const parts = (entry && entry.parts) || [];
+    if (!parts.length) continue;
+    try {
+      $('dl-status').textContent='Downloading: '+name;
+      const chunks = [];
+      for (let i=0;i<parts.length;i++) {
+        const buf = await api('/parts/'+parts[i].id,'GET',null,true);
+        const bytes = new Uint8Array(buf);
+        const dec = await decryptBytes(bytes);
+        chunks.push(dec);
+        $('dl-progress').style.width=Math.round(((done + (i+1)/parts.length)/names.length)*100)+'%';
+      }
+      const total = chunks.reduce((a,c)=>a+c.byteLength,0);
+      const out = new Uint8Array(total);
+      let off=0; chunks.forEach(c=>{out.set(c,off); off+=c.byteLength;});
+      const blob = new Blob([out]);
+      const fileName = name.split('/').pop();
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        const fileURL = URL.createObjectURL(blob);
         $('dl-result').style.display='block';
         const a=document.createElement('a'); a.href=fileURL; a.download=fileName;
-        a.textContent='⬇️ '+fileName+' (tap to save)'; a.style.color='var(--accent)'; a.style.fontWeight='700';
-        $('dl-result').innerHTML=''; $('dl-result').appendChild(a);
+        a.textContent='⬇️ '+fileName+' (tap to save)'; a.style.color='var(--accent)'; a.style.fontWeight='700'; a.style.display='block'; a.style.margin='6px 0';
+        $('dl-result').appendChild(a);
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href=url; a.download=fileName; document.body.appendChild(a); a.click();
+        setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},500);
       }
-    } else {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href=url; a.download=fileName; document.body.appendChild(a); a.click();
-      setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},500);
+      done++;
+    } catch(e) {
+      $('dl-msg').textContent='Error in '+name+': '+e.message;
+      return;
     }
-    $('dl-progress').style.width='100%';
-    $('dl-status').textContent='Done! File saved.';
-    $('dl-msg').className='msg ok';
-    $('dl-msg').textContent='✓ '+fileName+' restored & decrypted.';
-    toast('✓ '+fileName+' downloaded');
-    const del = confirm('Cloud se bhi delete karna hai? (Restore ke baad)');
-    if (del) {
-      for (const p of parts) { try{ await api('/parts/'+p.id,'DELETE'); }catch(e){} }
-      delete state.mappings[dlName];
-      const blob2 = new Blob([JSON.stringify({mobile:state.mappings})],{type:'application/octet-stream'});
-      await api('/map','PUT',blob2,true);
-      state.used -= parts.reduce((a,p)=>a+p.size,0);
-      sessionStorage_buzz(); loadMyFiles(); toast('Deleted from cloud');
-    }
-    setTimeout(()=>closeModal('modal-download'),2500);
-  } catch(e) {
-    $('dl-msg').textContent='Error: '+e.message;
-    $('dl-msg').className='msg err';
   }
+  $('dl-progress').style.width='100%';
+  $('dl-status').textContent='Done! '+done+' file(s) downloaded.';
+  $('dl-msg').className='msg ok';
+  $('dl-msg').textContent='✓ Sab files download ho gayi.';
+  toast('✓ '+done+' file(s) downloaded');
+  setTimeout(()=>closeModal('modal-download'),3000);
 }
 
 /* ---------- WEB CRYPTO (AES-256-GCM — derived from LOGIN PASSWORD) ---------- */
