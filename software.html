@@ -248,6 +248,28 @@
   </div>
 </section>
 
+<section id="mobile" style="background:var(--panel); border-block:1px solid var(--border);">
+  <div class="container" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:40px; align-items:center;">
+    <div>
+      <span style="display:inline-block; font-family:Consolas,monospace; font-size:12px; color:var(--accent); border:1px solid rgba(63,185,80,.35); background:rgba(63,185,80,.1); padding:5px 14px; border-radius:999px; margin-bottom:20px;">&#128241; MOBILE APP</span>
+      <h2 class="sec-title" style="text-align:left; margin-bottom:14px;">TAI on Your Phone</h2>
+      <p style="color:var(--muted); font-size:15px; line-height:1.7; margin-bottom:24px;">
+        Scan the QR code with your phone and TAI will open as an installable app on
+        <b style="color:var(--fg);">Android</b> and <b style="color:var(--fg);">iPhone</b>.
+        Signup, login, upload, restore — sab kuch mobile pe encrypted.
+      </p>
+      <div style="display:flex; gap:14px; flex-wrap:wrap;">
+        <a href="/tai/index.html" class="btn btn-outline" style="padding:12px 24px;">&#128241; Open Mobile App</a>
+      </div>
+      <p style="color:var(--muted); font-size:12px; margin-top:14px;">Install karne ke liye browser menu &rarr; "Add to Home Screen" / "Install App".</p>
+    </div>
+    <div style="text-align:center;" id="qr-box">
+      <div id="qr-code" style="display:inline-block; background:#fff; padding:16px; border-radius:12px;"></div>
+      <p style="color:var(--muted); font-size:12px; margin-top:12px;">Scan with phone camera</p>
+    </div>
+  </div>
+</section>
+
 <section id="pricing">
   <div class="container">
     <h2 class="sec-title">Simple Pricing</h2>
@@ -341,6 +363,18 @@
     <div><a href="#">Terms</a> &nbsp;&middot;&nbsp; <a href="#">Privacy</a> &nbsp;&middot;&nbsp; <a href="mailto:info@code99.pk">info@code99.pk</a></div>
   </div>
 </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+  try {
+    new QRCode(document.getElementById("qr-code"), {
+      text: "https://code99.pk/tai/",
+      width: 180,
+      height: 180,
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  } catch(e) {}
+</script>
 
 </body>
 </html>

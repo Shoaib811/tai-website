@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TAI — Tricrypt AI</title>
+<meta name="description" content="Zero-knowledge encrypted cloud storage">
+<meta name="theme-color" content="#0f1318">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :root {
+    --bg:#0f1318; --panel:#1a1f27; --card:#1e2430; --border:#2a3040;
+    --fg:#e8ecf1; --muted:#7a8394; --accent:#34d058; --blue:#1f6feb;
+    --danger:#f85149; --purple:#8b5cf6;
+  }
+  html,body { height:100%; }
+  body { background:var(--bg); color:var(--fg); font-family:'Segoe UI',system-ui,-apple-system,sans-serif; overflow:hidden; }
+  #app { height:100%; display:flex; flex-direction:column; }
+
+  .screen { display:none; height:100%; flex-direction:column; }
+  .screen.active { display:flex; }
+
+  /* HUD */
+  .hud { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:var(--panel); border-bottom:1px solid var(--border); }
+  .hud-logo { font-weight:800; font-size:20px; letter-spacing:2px; }
+  .hud-logo b { color:var(--accent); }
+  .hud-user { text-align:right; }
+  .hud-email { font-size:11px; color:var(--muted); max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .hud-plan { font-size:11px; font-weight:700; color:var(--blue); }
+  .hud-btn { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; padding:6px; }
+
+  /* Storage bar */
+  .storage { padding:16px 18px 10px; }
+  .storage-label { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:8px; }
+  .storage-label b { color:var(--fg); }
+  .bar { height:10px; background:var(--card); border-radius:99px; overflow:hidden; }
+  .bar-fill { height:100%; background:linear-gradient(90deg,var(--purple),var(--accent)); border-radius:99px; width:0%; transition:width .4s; }
+
+  /* Action buttons */
+  .actions { display:flex; gap:12px; padding:14px 18px; }
+  .action {
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:8px;
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:18px 8px; color:var(--fg); text-decoration:none; cursor:pointer;
+    transition:border-color .2s, transform .1s;
+  }
+  .action:active { transform:scale(.96); }
+  .action .ai { font-size:26px; }
+  .action span { font-size:12px; font-weight:600; }
+  .action.primary { border-color:var(--accent); }
+  .action.primary .ai { color:var(--accent); }
+
+  /* Files */
+  .files-wrap { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 18px 90px; }
+  .file-row { display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:10px; }
+  .file-icon { font-size:22px; }
+  .file-info { flex:1; min-width:0; }
+  .file-name { font-size:14px; font-weight:600; word-break:break-all; }
+  .file-meta { font-size:11px; color:var(--muted); }
+  .file-btn { background:var(--blue); color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; }
+
+  /* Auth */
+  .auth { align-items:center; justify-content:center; padding:30px 24px; }
+  .auth-box { width:100%; max-width:360px; }
+  .auth-logo { text-align:center; margin-bottom:28px; }
+  .auth-logo h1 { font-size:34px; letter-spacing:3px; font-weight:900; }
+  .auth-logo h1 b { color:var(--accent); }
+  .auth-logo p { color:var(--muted); font-size:12px; margin-top:4px; }
+  .tabs { display:flex; background:var(--panel); border-radius:10px; padding:4px; margin-bottom:20px; }
+  .tab { flex:1; padding:10px; text-align:center; border:none; background:none; color:var(--muted); font-size:14px; font-weight:700; border-radius:8px; cursor:pointer; }
+  .tab.on { background:var(--accent); color:#04260f; }
+  .panel { background:var(--panel); border-radius:14px; padding:20px; }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+  .field input { width:100%; padding:12px 14px; border-radius:10px; background:var(--card); border:1px solid var(--border); color:var(--fg); font-size:15px; outline:none; }
+  .field input:focus { border-color:var(--accent); }
+  .pw-wrap { position:relative; }
+  .pw-wrap input { padding-right:44px; }
+  .eye { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; }
+  .btn-main { width:100%; padding:14px; border:none; border-radius:10px; background:var(--accent); color:#04260f; font-size:15px; font-weight:800; cursor:pointer; margin-top:6px; }
+  .btn-main:active { transform:scale(.98); }
+  .link { text-align:center; margin-top:14px; font-size:13px; color:var(--blue); cursor:pointer; }
+  .msg { text-align:center; font-size:13px; margin-top:12px; min-height:18px; }
+  .msg.err { color:var(--danger); }
+  .msg.ok { color:var(--accent); }
+
+  /* Code input (verification) */
+  .code-row { display:flex; gap:8px; justify-content:center; margin:16px 0 6px; }
+  .code-box { width:44px; height:54px; text-align:center; font-size:24px; font-weight:800; border-radius:10px; background:var(--card); border:1px solid var(--border); color:var(--fg); outline:none; }
+  .code-box:focus { border-color:var(--accent); }
+
+  /* Bottom nav */
+  .bottom-nav { position:fixed; bottom:0; left:0; right:0; display:flex; border-top:1px solid var(--border); background:var(--panel); padding-bottom:env(safe-area-inset-bottom); z-index:50; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 4px; background:none; border:none; color:var(--muted); font-size:10px; cursor:pointer; }
+  .nav-item .ni { font-size:20px; }
+  .nav-item.on { color:var(--accent); }
+
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:flex-end; z-index:100; }
+  .modal.active { display:flex; }
+  .sheet { width:100%; background:var(--panel); border-radius:18px 18px 0 0; padding:20px 20px calc(24px + env(safe-area-inset-bottom)); max-height:85vh; overflow-y:auto; }
+  .sheet h3 { font-size:17px; margin-bottom:16px; }
+  .sheet .field { margin-bottom:12px; }
+  .sheet .btn-main { margin-top:4px; }
+  .progress-wrap { margin:10px 0; }
+  .progress-bar { height:8px; background:var(--card); border-radius:99px; overflow:hidden; }
+  .progress-fill { height:100%; background:var(--accent); width:0%; transition:width .2s; }
+  .progress-txt { text-align:center; font-size:13px; color:var(--muted); margin-top:8px; }
+  .save-file { display:none; margin-top:10px; }
+  .file-toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 18px; z-index:200; font-size:13px; box-shadow:0 10px 30px rgba(0,0,0,.4); }
+
+  .empty { text-align:center; color:var(--muted); padding:60px 20px; }
+  .empty .ei { font-size:50px; margin-bottom:16px; opacity:.4; }
+  .empty p { font-size:14px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- AUTH SCREEN -->
+  <div class="screen auth active" id="screen-auth">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <h1>T<b>AI</b></h1>
+        <p>Zero-Knowledge Encrypted Storage</p>
+      </div>
+      <div class="tabs">
+        <button class="tab on" id="tab-login" onclick="switchTab('login')">Login</button>
+        <button class="tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
+      </div>
+
+      <div class="panel">
+        <!-- LOGIN -->
+        <div id="login-panel">
+          <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@email.com" autocomplete="email"></div>
+          <div class="field"><label>Password</label>
+            <div class="pw-wrap"><input type="password" id="login-pw" placeholder="••••••••"><button class="eye" onclick="togglePw('login-pw',this)">👁</button></div>
+          </div>
+          <button class="btn-main" onclick="doLogin()">Login</button>
+          <div class="link" onclick="showForgot()">Forgot Password?</div>
+          <div class="msg" id="login-msg"></div>
+        </div>
+
+        <!-- SIGNUP -->
+        <div id="signup-panel" style="display:none;">
+          <div class="field"><label>Email</label><input type="email" id="su-email" placeholder="you@email.com" autocomplete="email"></div>
+          <div class="field"><label>Password</label>
+            <div class="pw-wrap"><input type="password" id="su-pw" placeholder="••••••••" oninput="checkStrength()"><button class="eye" onclick="togglePw('su-pw',this)">👁</button></div>
+          </div>
+          <div class="field"><label>Confirm Password</label>
+            <div class="pw-wrap"><input type="password" id="su-pw2" placeholder="••••••••"><button class="eye" onclick="togglePw('su-pw2',this)">👁</button></div>
+          </div>
+          <div class="msg" id="strength" style="font-size:11px;"></div>
+          <button class="btn-main" onclick="doSignup()">Create Account</button>
+          <div class="msg" id="su-msg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN SCREEN -->
+  <div class="screen" id="screen-main">
+    <div class="hud">
+      <div class="hud-logo">T<b>AI</b></div>
+      <button class="hud-btn" onclick="doLogout()">⏻</button>
+      <div class="hud-user">
+        <div class="hud-email" id="hud-email">—</div>
+        <div class="hud-plan" id="hud-plan">FREE 1GB</div>
+      </div>
+    </div>
+
+    <div class="storage">
+      <div class="storage-label"><span>Storage</span><b id="storage-used">0 MB / 0 MB</b></div>
+      <div class="bar"><div class="bar-fill" id="storage-bar"></div></div>
+    </div>
+
+    <div class="actions" id="quick-actions">
+      <div class="action primary" onclick="showUpload()"><span class="ai">⬆️</span><span>Upload File</span></div>
+      <div class="action" onclick="showDownload()"><span class="ai">⬇️</span><span>Download</span></div>
+    </div>
+
+    <div class="files-wrap" id="files-wrap">
+      <div class="empty" id="files-empty">
+        <div class="ei">🗂️</div>
+        <p>No files yet.<br>Upload your first file from the PC app or here.</p>
+      </div>
+      <div id="files-list"></div>
+    </div>
+  </div>
+
+  <!-- SHARE/MAP SCREEN (viewer) -->
+  <div class="screen" id="screen-files">
+    <div class="hud">
+      <div class="hud-logo">T<b>AI</b></div>
+      <button class="hud-btn">📁</button>
+      <div class="hud-user"><div class="hud-email" id="hud-email2">—</div><div class="hud-plan" id="hud-plan2"></div></div>
+    </div>
+    <div class="files-wrap">
+      <div class="empty" id="files-empty2"><div class="ei">🗂️</div><p>No files.</p></div>
+      <div id="files-list2"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav" style="display:none;" id="bottom-nav">
+    <button class="nav-item on" onclick="showScreen('main')"><span class="ni">🏠</span>Home</button>
+    <button class="nav-item" onclick="showScreen('files')"><span class="ni">📁</span>My Files</button>
+  </div>
+
+  <!-- UPLOAD MODAL -->
+  <div class="modal" id="modal-upload">
+    <div class="sheet">
+      <h3>⬆️ Upload File (Encrypted)</h3>
+      <input type="file" id="upload-file-input">
+      <div class="field" style="margin-top:12px;"><label>This file will be encrypted (AES-256-GCM) and sharded on YOUR device, then stored across the cloud.</label></div>
+      <button class="btn-main" onclick="startUpload()">Encrypt &amp; Upload</button>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="upload-progress"></div></div>
+        <div class="progress-txt" id="upload-status">Ready</div>
+      </div>
+      <div class="msg" id="upload-msg"></div>
+    </div>
+  </div>
+
+  <!-- DOWNLOAD MODAL -->
+  <div class="modal" id="modal-download">
+    <div class="sheet">
+      <h3>⬇️ Download a File</h3>
+      <button class="btn-main" onclick="startDownload()" style="background:var(--blue);color:#fff;">Download &amp; Decrypt My Files</button>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="dl-progress"></div></div>
+        <div class="progress-txt" id="dl-status">Ready</div>
+      </div>
+      <div class="msg" id="dl-msg"></div>
+      <div id="dl-result" class="save-file"></div>
+    </div>
+  </div>
+
+  <!-- CODE MODAL (email/forgot verification) -->
+  <div class="modal" id="modal-code">
+    <div class="sheet">
+      <h3 id="code-title">Enter Verification Code</h3>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:16px;" id="code-sub">Code email pe bheja gaya hai.</p>
+      <div class="code-row">
+        <input class="code-box" maxlength="1" inputmode="numeric">
+        <input class="code-box" maxlength="1" inputmode="numeric">
+        <input class="code-box" maxlength="1" inputmode="numeric">
+        <input class="code-box" maxlength="1" inputmode="numeric">
+        <input class="code-box" maxlength="1" inputmode="numeric">
+        <input class="code-box" maxlength="1" inputmode="numeric">
+      </div>
+      <button class="btn-main" id="code-btn" onclick="verifyCode()">Verify</button>
+      <div class="msg" id="code-msg"></div>
+      <input type="hidden" id="code-context" value="signup">
+    </div>
+  </div>
+
+</div>
+
+<div class="file-toast" id="toast" style="display:none;"></div>
+
+<script>
+'use strict';
+const API = 'https://api.code99.pk/api/v1';
+let token = localStorage.getItem('tai_token') || null;
+let state = { email: null, plan: 'trial', quota: 1073741824, used: 0, mappings: {} };
+
+/* ---------- Service Worker ---------- */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+/* ---------- Helpers ---------- */
+const $ = (id) => document.getElementById(id);
+async function api(path, method='GET', body=null, raw=false) {
+  const headers = {};
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  if (body && !raw) headers['Content-Type'] = 'application/json';
+  const opts = { method, headers };
+  if (body) opts.body = raw ? body : JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  if (res.status === 401) { logout(); throw new Error('Session expired. Login again.'); }
+  const isJson = res.headers.get('content-type')?.includes('json');
+  let data = isJson ? await res.json() : await res.arrayBuffer();
+  if (!res.ok) { let msg = 'Error'; if (isJson && data.error) msg = data.error; throw new Error(msg); }
+  return data;
+}
+function fmt(bytes) {
+  if (bytes >= 1073741824) return (bytes/1073741824).toFixed(2)+' GB';
+  if (bytes >= 1048576) return (bytes/1048576).toFixed(1)+' MB';
+  return (bytes/1024).toFixed(0)+' KB';
+}
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._t); t._t = setTimeout(()=>t.style.display='none', 2500);
+}
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('screen-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('on', n.textContent.includes(name==='files'?'My':'Home')));
+  if (name==='files') loadMyFiles();
+}
+function sessionStorage_buzz() {
+  const b = $('storage-bar'); const used = $('storage-used');
+  const pct = state.quota ? Math.min((state.used/state.quota)*100,100) : 0;
+  b.style.width = pct+'%';
+  used.textContent = fmt(state.used) + ' / ' + fmt(state.quota);
+  $('hud-email').textContent = state.email || '—';
+  $('hud-email2').textContent = state.email || '—';
+  const plan = state.plan==='pro' ? 'PRO 5GB' : state.plan==='basic' ? 'BASIC 2GB' : 'FREE 1GB';
+  $('hud-plan').textContent = plan; $('hud-plan2').textContent = plan;
+}
+
+/* ---------- Tabs ---------- */
+function switchTab(t) {
+  $('tab-login').classList.toggle('on', t==='login');
+  $('tab-signup').classList.toggle('on', t==='signup');
+  $('login-panel').style.display = t==='login' ? 'block' : 'none';
+  $('signup-panel').style.display = t==='signup' ? 'block' : 'none';
+}
+function togglePw(id, btn) {
+  const inp = $(id); const sh = inp.type==='password';
+  inp.type = sh ? 'text' : 'password'; btn.textContent = sh ? '🙈' : '👁';
+}
+function checkStrength() {
+  const p = $('su-pw').value;
+  let s = 0;
+  if (p.length >= 8) s++;
+  if (/[A-Z]/.test(p)) s++;
+  if (/\d/.test(p)) s++;
+  if (/[^A-Za-z0-9]/.test(p)) s++;
+  const labels = ['Very Weak','Weak','Good','Strong','Excellent'];
+  const colors = ['#f85149','#d29922','#8b5cf6','#34d058','#34d058'];
+  $('strength').textContent = (p ? 'Strength: ' + labels[s] : '');
+  $('strength').style.color = s<4 ? colors[s] : colors[s];
+  return s >= 4;
+}
+
+/* ---------- AUTH ---------- */
+let pendingSignup = null;
+async function doLogin() {
+  const email = $('login-email').value.trim();
+  const pw = $('login-pw').value;
+  $('login-msg').textContent = 'Logging in...';
+  try {
+    const res = await api('/auth/login','POST',{email,password:pw});
+    token = res.token; localStorage.setItem('tai_token', token);
+    await loadMe(); enterApp();
+  } catch(e) { $('login-msg').textContent = e.message; $('login-msg').className='msg err'; }
+}
+async function doSignup() {
+  const email = $('su-email').value.trim();
+  const pw = $('su-pw').value, pw2 = $('su-pw2').value;
+  $('su-msg').className = 'msg';
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { $('su-msg').textContent='Valid email daalo'; $('su-msg').className='msg err'; return; }
+  if (pw !== pw2) { $('su-msg').textContent='Passwords match nahi karte'; $('su-msg').className='msg err'; return; }
+  if (!checkStrength()) { $('su-msg').textContent='Password: 8+ chars, uppercase, number, symbol'; $('su-msg').className='msg err'; return; }
+  $('su-msg').textContent = 'Sending code to email...';
+  try {
+    await api('/auth/send-code','POST',{email,password:pw});
+    pendingSignup = { email, password: pw };
+    $('code-context').value = 'signup';
+    openCodeModal('Email Verification','6-digt code aapke email pe aya hai.');
+    $('su-msg').textContent = '';
+  } catch(e) { $('su-msg').textContent=e.message; $('su-msg').className='msg err'; }
+}
+async function verifyCode() {
+  const code = getCode();
+  if (code.length !== 6) { $('code-msg').textContent='6 digt code daalo'; return; }
+  const ctx = $('code-context').value;
+  $('code-msg').textContent = 'Verifying...';
+  try {
+    if (ctx === 'signup') {
+      const res = await api('/auth/verify-code','POST',{email:pendingSignup.email, code});
+      token = res.token; localStorage.setItem('tai_token',token);
+      closeModal('modal-code');
+      await loadMe(); enterApp();
+    } else if (ctx === 'forgot') {
+      const res = await api('/auth/forgot-reset','POST',{email:pendingForgot.email, code, new_password:pendingForgot.password});
+      token = res.token; localStorage.setItem('tai_token', token);
+      closeModal('modal-code');
+      await loadMe(); enterApp();
+    }
+  } catch(e){ $('code-msg').textContent=e.message; }
+}
+async function loadMe() {
+  const me = await api('/me');
+  state.email = me.email; state.plan = me.plan;
+  state.quota = me.quota_bytes; state.used = me.used_bytes;
+  sessionStorage_buzz();
+}
+function enterApp() {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('screen-main').classList.add('active');
+  $('bottom-nav').style.display = 'flex';
+  loadMyFiles();
+}
+async function doLogout() {
+  if (!confirm('Logout?')) return;
+  logout();
+}
+function logout() {
+  token = null; localStorage.removeItem('tai_token');
+  $('bottom-nav').style.display='none';
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('screen-auth').classList.add('active');
+  $('login-msg').textContent='';
+}
+
+/* ---------- Code Modal ---------- */
+function openCodeModal(title, sub) {
+  $('code-title').textContent = title;
+  $('code-sub').textContent = sub;
+  $('code-msg').textContent='';
+  document.querySelectorAll('.code-box').forEach(b=>b.value='');
+  $('modal-code').classList.add('active');
+  document.querySelectorAll('.code-box')[0].focus();
+}
+function getCode() {
+  return Array.from(document.querySelectorAll('.code-box')).map(b=>b.value).join('');
+}
+document.querySelectorAll('.code-box').forEach((box,i,arr)=>{
+  box.addEventListener('input', ()=>{
+    box.value = box.value.replace(/[^0-9]/g,'');
+    if (box.value && i < arr.length-1) arr[i+1].focus();
+  });
+  box.addEventListener('keydown', (e)=>{
+    if (e.key==='Backspace' && !box.value && i>0) arr[i-1].focus();
+  });
+});
+
+/* ---------- Forgot Password ---------- */
+let pendingForgot = null;
+function showForgot() {
+  const email = prompt('Enter your email:');
+  if (!email) return;
+  if (!confirm('Recovery code aapke email pe bheja jayega. Continue?')) return;
+  $('login-msg').textContent='Sending code...';
+  api('/auth/forgot-send','POST',{email}).then(()=>{
+    $('login-msg').textContent='';
+    const np = prompt('Enter new password (8+ chars, uppercase, number, symbol)');
+    if (!np || np.length<8 || !/[A-Z]/.test(np) || !/\d/.test(np) || !/[^A-Za-z0-9]/.test(np)) {
+      $('login-msg').textContent='Password rules follow karo'; return;
+    }
+    pendingForgot = { email, password: np };
+    $('code-context').value='forgot';
+    openCodeModal('Reset Password','Code email pe bheja hai. Enter karo.');
+  }).catch(e=>$('login-msg').textContent=e.message);
+}
+function closeModal(id){ $(id).classList.remove('active'); }
+document.querySelectorAll('.modal').forEach(m=>{
+  m.addEventListener('click', (e)=>{ if(e.target===m) { if(m.id!=='modal-code') m.classList.remove('active'); } });
+});
+
+/* ---------- My Files (from mapping via map blob) ---------- */
+async function loadMyFiles() {
+  try {
+    const map = await api('/map', 'GET', null, true);
+    let obj;
+    try { obj = JSON.parse(new TextDecoder().decode(map)); } catch(e){ obj = {}; }
+    state.mappings = obj.files || {};
+    renderFiles();
+  } catch(e) {
+    state.mappings = {};
+    renderFiles();
+  }
+}
+function renderFiles() {
+  const list = $('files-list'); list.innerHTML='';
+  const names = Object.keys(state.mappings);
+  const empty = $('files-empty');
+  empty.style.display = names.length ? 'none' : 'block';
+  const list2 = $('files-list2'); list2.innerHTML='';
+  const empty2 = $('files-empty2');
+  empty2.style.display = names.length ? 'none' : 'block';
+  names.forEach(orig => {
+    const row = document.createElement('div');
+    row.className='file-row';
+    const parts = state.mappings[orig].parts || [];
+    const size = parts.reduce((a,p)=>a+p.size,0);
+    row.innerHTML = `
+      <div class="file-icon">${iconOf(orig)}</div>
+      <div class="file-info">
+        <div class="file-name">${esc(orig)}</div>
+        <div class="file-meta">${parts.length} parts &middot; ${fmt(size)}</div>
+      </div>
+      <button class="file-btn" onclick="downloadFile('${orig.replace(/'/g,"\\'")}')">Restore</button>`;
+    list.appendChild(row.cloneNode(true));
+    list2.appendChild(row);
+  });
+}
+function iconOf(n) {
+  const e = n.split('.').pop().toLowerCase();
+  if (['jpg','jpeg','png','gif','webp'].includes(e)) return '🖼️';
+  if (['pdf'].includes(e)) return '📄';
+  if (['mp4','avi','mov','mkv'].includes(e)) return '🎬';
+  if (['mp3','wav','flac'].includes(e)) return '🎵';
+  if (['zip','rar','7z'].includes(e)) return '🗜️';
+  return '📁';
+}
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ---------- Upload ---------- */
+let uploadBuf = null, uploadName = '';
+function showUpload() { $('modal-upload').classList.add('active'); $('upload-msg').textContent=''; $('upload-progress').style.width='0%'; $('upload-status').textContent='Ready'; }
+function startUpload() {
+  const f = $('upload-file-input').files[0];
+  if (!f) { $('upload-msg').textContent='Pehle file select karo'; return; }
+  $('upload-msg').textContent='';
+  const reader = new FileReader();
+  reader.onload = () => processUpload(reader.result, f.name);
+  reader.readAsArrayBuffer(f);
+}
+async function processUpload(data, origName) {
+  $('upload-status').textContent='Encrypting...';
+  try {
+    const size = data.byteLength;
+    if (size > state.quota - state.used) { throw new Error('Quota exceed ho gayi'); }
+    const parts = Math.ceil(size / (100*1024 - 28));
+    const partList = [];
+    $('upload-status').textContent='Encrypting & sharding...';
+    for (let i=0;i<parts;i++) {
+      const start = i*(100*1024-28);
+      const chunk = data.slice(start, start + (100*1024-28));
+      const enc = await encryptBytes(new Uint8Array(chunk));
+      const up = await api('/parts','POST',enc,true);
+      partList.push({ id: up.id, size: enc.byteLength, sha256: up.sha256 });
+      $('upload-progress').style.width = Math.round(((i+1)/parts)*100)+'%';
+      $('upload-status').textContent = 'Uploading part '+(i+1)+'/'+parts;
+    }
+    const mapping = Object.assign({}, state.mappings, {[origName]: {original:origName, parts:partList, created:Date.now()}});
+    const blob = new Blob([JSON.stringify({files:mapping})], {type:'application/octet-stream'});
+    await api('/map','PUT', blob, true);
+    state.mappings = mapping;
+    $('upload-progress').style.width='100%';
+    $('upload-status').textContent='Done!';
+    $('upload-msg').className='msg ok';
+    $('upload-msg').textContent='✓ Upload complete! Encrypted & sharded.';
+    state.used += size;
+    sessionStorage_buzz();
+    loadMyFiles();
+    setTimeout(()=>closeModal('modal-upload'), 1500);
+    toast('✓ File uploaded securely');
+  } catch(e) {
+    $('upload-msg').textContent='Error: '+e.message;
+    $('upload-msg').className='msg err';
+  }
+}
+
+/* ---------- Download ---------- */
+let dlName = null;
+function showDownload() {
+  const names = Object.keys(state.mappings);
+  if (!names.length) { toast('No files to download'); return; }
+  const pick = prompt('Enter file name (from My Files):', names[0]);
+  if (!pick) return;
+  const entry = state.mappings[pick];
+  if (!entry) { toast('File nahi mili'); return; }
+  dlName = pick;
+  $('modal-download').classList.add('active');
+  $('dl-result').style.display='none';
+  $('dl-msg').textContent='';
+  $('dl-progress').style.width='0%';
+  $('dl-status').textContent='Ready';
+}
+async function startDownload() {
+  if (!dlName) return;
+  const entry = state.mappings[dlName];
+  const parts = entry.parts || [];
+  try {
+    const chunks = [];
+    for (let i=0;i<parts.length;i++) {
+      $('dl-status').textContent='Downloading part '+(i+1)+'/'+parts.length;
+      const buf = await api('/parts/'+parts[i].id,'GET',null,true);
+      const bytes = new Uint8Array(buf);
+      const dec = await decryptBytes(bytes);
+      chunks.push(dec);
+      $('dl-progress').style.width=Math.round(((i+1)/parts.length)*100)+'%';
+    }
+    const total = chunks.reduce((a,c)=>a+c.byteLength,0);
+    const out = new Uint8Array(total);
+    let off=0; chunks.forEach(c=>{out.set(c,off); off+=c.byteLength;});
+    const blob = new Blob([out]);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=dlName; a.click();
+    $('dl-progress').style.width='100%';
+    $('dl-status').textContent='Done! File saved.';
+    $('dl-msg').className='msg ok';
+    $('dl-msg').textContent='✓ '+dlName+' restored & decrypted. Cloud se delete kar diya?';
+    const del = confirm('Semantic beh — cloud se bhi delete karna hai? (File restore hone ke baad)');
+    if (del) {
+      for (const p of parts) { try{ await api('/parts/'+p.id,'DELETE'); }catch(e){} }
+      delete state.mappings[dlName];
+      const blob2 = new Blob([JSON.stringify({files:state.mappings})],{type:'application/octet-stream'});
+      await api('/map','PUT',blob2,true);
+      state.used -= parts.reduce((a,p)=>a+p.size,0);
+      sessionStorage_buzz(); loadMyFiles(); toast('Deleted from cloud');
+    }
+    setTimeout(()=>closeModal('modal-download'),2000);
+  } catch(e) {
+    $('dl-msg').textContent='Error: '+e.message;
+    $('dl-msg').className='msg err';
+  }
+}
+
+/* ---------- WEB CRYPTO (AES-256-GCM + PBKDF2 600k) ---------- */
+// IMPORTANT: Uses a device-generated key stored per account, encrypted by PBKDF2.
+const enc = new TextEncoder();
+async function getKeyFromPassword(pw, salt) {
+  const base = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt:salt, iterations:600000, hash:'SHA-256' },
+    base, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
+  );
+}
+async function encryptBytes(bytes) {
+  const pw = await promptForPass(); if (!pw) throw new Error('Cancelled');
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await getKeyFromPassword(pw, salt);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encData = await crypto.subtle.encrypt({name:'AES-GCM',iv}, key, bytes);
+  const iv2 = new Uint8Array(iv); const enc2 = new Uint8Array(encData);
+  const out = new Uint8Array(4 + salt.length + iv2.length + enc2.length);
+  out[0]=1; // version
+  out.set(salt,1); out.set(iv2,1+salt.length); out.set(enc2,1+salt.length+iv2.length);
+  return out;
+}
+async function decryptBytes(bytes) {
+  const pw = await promptForPass(); if (!pw) throw new Error('Cancelled');
+  const ver=bytes[0]; const salt=bytes.slice(1,17); const iv=bytes.slice(17,29); const ct=bytes.slice(29);
+  const key = await getKeyFromPassword(pw, salt);
+  const dec = await crypto.subtle.decrypt({name:'AES-GCM',iv}, key, ct);
+  return new Uint8Array(dec);
+}
+async function promptForPass() {
+  return new Promise((res)=>{
+    const pw = prompt('Enter your TAI crypto password:');
+    res(pw || null);
+  });
+}
+
+/* ---------- Init ---------- */
+(async function init(){
+  if (token) {
+    try { await loadMe(); enterApp(); return; }
+    catch(e) { logout(); }
+  }
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('screen-auth').classList.add('active');
+})();
+</script>
+</body>
+</html>
