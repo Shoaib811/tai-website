@@ -498,7 +498,7 @@ function renderFiles() {
       <div class="file-icon">${iconOf(displayName)}</div>
       <div class="file-info">
         <div class="file-name">${esc(displayName)}</div>
-        <div class="file-meta">${parts.length} parts &middot; ${fmt(size)}</div>
+        <div class="file-meta">${fmt(size)}</div>
       </div>
       <button class="file-btn" onclick="downloadFile('${key.replace(/'/g,"\\'")}')">⬇️ Download</button>`;
     list.appendChild(row.cloneNode(true));

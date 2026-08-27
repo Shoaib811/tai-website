@@ -1,4 +1,4 @@
-const CACHE = 'tai-cache-v1';
+const CACHE = 'tai-cache-v2';
 const ASSETS = [
   './',
   'index.html',
@@ -21,7 +21,15 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
+  // Navigation (index.html) ke liye NETWORK-FIRST: pehle network, na ho toh cache.
+  // Isse nayi deploy hamesha fresh load hogi (purana page kabhi pin nahi hoga).
   e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request))
+    fetch(e.request)
+      .then(async (res) => {
+        const cache = await caches.open(CACHE);
+        cache.put(e.request, res.clone());
+        return res;
+      })
+      .catch(() => caches.match(e.request))
   );
 });
