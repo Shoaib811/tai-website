@@ -486,18 +486,20 @@ function renderFiles() {
   const list2 = $('files-list2'); list2.innerHTML='';
   const empty2 = $('files-empty2');
   empty2.style.display = names.length ? 'none' : 'block';
-  names.forEach(orig => {
+  names.forEach(key => {
+    const entry = state.mappings[key] || {};
+    const parts = (entry && entry.parts) || [];
+    const size = parts.reduce((a,p)=>a+p.size,0);
+    const displayName = (entry && entry.original) || key;
     const row = document.createElement('div');
     row.className='file-row';
-    const parts = state.mappings[orig].parts || [];
-    const size = parts.reduce((a,p)=>a+p.size,0);
     row.innerHTML = `
-      <div class="file-icon">${iconOf(orig)}</div>
+      <div class="file-icon">${iconOf(displayName)}</div>
       <div class="file-info">
-        <div class="file-name">${esc(orig)}</div>
+        <div class="file-name">${esc(displayName)}</div>
         <div class="file-meta">${parts.length} parts &middot; ${fmt(size)}</div>
       </div>
-      <button class="file-btn" onclick="downloadFile('${orig.replace(/'/g,"\\'")}')">⬇️ Download</button>`;
+      <button class="file-btn" onclick="downloadFile('${key.replace(/'/g,"\\'")}')">⬇️ Download</button>`;
     list.appendChild(row.cloneNode(true));
     list2.appendChild(row);
   });
@@ -592,7 +594,7 @@ async function downloadFile(origName) {
     const out = new Uint8Array(total);
     let off=0; chunks.forEach(c=>{out.set(c,off); off+=c.byteLength;});
     const blob = new Blob([out]);
-    const fileName = origName.split('/').pop();
+    const fileName = (entry.original || origName).split('/').pop();
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     if (isIOS) {
       $('modal-download').classList.add('active');
