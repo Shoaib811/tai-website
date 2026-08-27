@@ -333,14 +333,19 @@ function togglePw(id, btn) {
 function checkStrength() {
   const p = $('su-pw').value;
   let s = 0;
-  if (p.length >= 8) s++;
-  if (/[A-Z]/.test(p)) s++;
-  if (/\d/.test(p)) s++;
-  if (/[^A-Za-z0-9]/.test(p)) s++;
+  const req = [];
+  if (p.length >= 8) s++; else req.push('8+ chars');
+  if (/[A-Z]/.test(p)) s++; else req.push('uppercase');
+  if (/\d/.test(p)) s++; else req.push('number');
+  if (/[^A-Za-z0-9]/.test(p)) s++; else req.push('symbol (!@# etc)');
   const labels = ['Very Weak','Weak','Good','Strong','Excellent'];
   const colors = ['#f85149','#d29922','#8b5cf6','#34d058','#34d058'];
-  $('strength').textContent = (p ? 'Strength: ' + labels[s] : '');
-  $('strength').style.color = s<4 ? colors[s] : colors[s];
+  if (p) {
+    $('strength').textContent = 'Strength: ' + labels[s] + (s < 4 ? ' | Missing: ' + req.join(', ') : '');
+  } else {
+    $('strength').textContent = '';
+  }
+  $('strength').style.color = colors[s];
   return s >= 4;
 }
 
@@ -497,8 +502,7 @@ function renderFiles() {
       <div class="file-info">
         <div class="file-name">${esc(orig)}</div>
         <div class="file-meta">${parts.length} parts &middot; ${fmt(size)}</div>
-      </div>
-      <button class="file-btn" onclick="downloadFile('${orig.replace(/'/g,"\\'")}')">Restore</button>`;
+      </div>`;
     list.appendChild(row.cloneNode(true));
     list2.appendChild(row);
   });
@@ -577,41 +581,40 @@ async function processUpload(data, origName) {
 }
 
 async function downloadFile(origName) {
-  // Single file restore (Restore button)
-  const entry = state.mappings[origName];
-  const parts = (entry && entry.parts) || [];
-  if (!parts.length) { toast('No parts'); return; }
-  $('dl-result').style.display='none';
-  try {
-    const chunks = [];
-    for (let i=0;i<parts.length;i++) {
-      const buf = await api('/parts/'+parts[i].id,'GET',null,true);
-      const bytes = new Uint8Array(buf);
-      const dec = await decryptBytes(bytes);
-      chunks.push(dec);
-    }
-    const total = chunks.reduce((a,c)=>a+c.byteLength,0);
-    const out = new Uint8Array(total);
-    let off=0; chunks.forEach(c=>{out.set(c,off); off+=c.byteLength;});
-    const blob = new Blob([out]);
-    const fileName = origName.split('/').pop();
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (isIOS) {
-      const fileURL = URL.createObjectURL(blob);
-      $('dl-result').style.display='block';
-      $('dl-result').innerHTML='';
-      const a=document.createElement('a'); a.href=fileURL; a.download=fileName;
-      a.textContent='⬇️ '+fileName+' (tap to save)'; a.style.color='var(--accent)'; a.style.fontWeight='700'; a.style.display='block'; a.style.margin='6px 0';
-      $('dl-result').appendChild(a);
-    } else {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href=url; a.download=fileName; document.body.appendChild(a); a.click();
-      setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},500);
-    }
-    toast('✓ '+fileName+' downloaded');
-  } catch(e) {
-    toast('Error: '+e.message);
+  // Single file download (uses same per-file logic). Retained for flexibility.
+  const names = [origName];
+  for (const name of names) {
+    const entry = state.mappings[name];
+    const parts = (entry && entry.parts) || [];
+    if (!parts.length) continue;
+    try {
+      const chunks = [];
+      for (let i=0;i<parts.length;i++) {
+        const buf = await api('/parts/'+parts[i].id,'GET',null,true);
+        const bytes = new Uint8Array(buf);
+        const dec = await decryptBytes(bytes);
+        chunks.push(dec);
+      }
+      const total = chunks.reduce((a,c)=>a+c.byteLength,0);
+      const out = new Uint8Array(total);
+      let off=0; chunks.forEach(c=>{out.set(c,off); off+=c.byteLength;});
+      const blob = new Blob([out]);
+      const fileName = name.split('/').pop();
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        const fileURL = URL.createObjectURL(blob);
+        $('dl-result').style.display='block';
+        $('dl-result').innerHTML='';
+        const a=document.createElement('a'); a.href=fileURL; a.download=fileName;
+        a.textContent='⬇️ '+fileName+' (tap to save)'; a.style.color='var(--accent)'; a.style.fontWeight='700'; a.style.display='block'; a.style.margin='6px 0';
+        $('dl-result').appendChild(a);
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href=url; a.download=fileName; document.body.appendChild(a); a.click();
+        setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},500);
+      }
+    } catch(e) { toast('Error: '+e.message); }
   }
 }
 
@@ -671,10 +674,28 @@ async function startDownload() {
       return;
     }
   }
+  // Delete downloaded files from cloud so My Files clears + re-upload doesn't show them
+  const downloaded = Object.keys(state.mappings);
+  let deleted = 0;
+  for (const name of downloaded) {
+    const entry = state.mappings[name];
+    const parts = (entry && entry.parts) || [];
+    try {
+      for (const p of parts) { try{ await api('/parts/'+p.id,'DELETE'); }catch(e){} }
+      deleted++;
+    } catch(e) {}
+  }
+  if (deleted) {
+    state.used = Math.max(0, state.used - downloaded.reduce((a,n)=>{const p=(state.mappings[n]&&state.mappings[n].parts)||[];return a+p.reduce((x,y)=>x+y.size,0);},0));
+  }
+  state.mappings = {};
+  const emptyBlob = new Blob([JSON.stringify({mobile:{}})], {type:'application/octet-stream'});
+  try { await api('/map','PUT',emptyBlob,true); } catch(e) {}
+  sessionStorage_buzz(); loadMyFiles();
   $('dl-progress').style.width='100%';
-  $('dl-status').textContent='Done! '+done+' file(s) downloaded.';
+  $('dl-status').textContent='Done! '+done+' file(s) downloaded & removed from cloud.';
   $('dl-msg').className='msg ok';
-  $('dl-msg').textContent='✓ Sab files download ho gayi.';
+  $('dl-msg').textContent='✓ Sab files download ho gayi aur cloud se delete.';
   toast('✓ '+done+' file(s) downloaded');
   setTimeout(()=>closeModal('modal-download'),3000);
 }
