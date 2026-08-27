@@ -673,9 +673,13 @@ async function encryptBytes(bytes) {
 async function decryptBytes(bytes) {
   const pw = await promptForPass(); if (!pw) throw new Error('Cancelled');
   const ver=bytes[0]; const salt=bytes.slice(1,17); const iv=bytes.slice(17,29); const ct=bytes.slice(29);
-  const key = await getKeyFromPassword(pw, salt);
-  const dec = await crypto.subtle.decrypt({name:'AES-GCM',iv}, key, ct);
-  return new Uint8Array(dec);
+  try {
+    const key = await getKeyFromPassword(pw, salt);
+    const dec = await crypto.subtle.decrypt({name:'AES-GCM',iv}, key, ct);
+    return new Uint8Array(dec);
+  } catch(e) {
+    throw new Error('Decrypt fail: password galat hai ya data corrupt. (Wohi password use karo jo upload ke waqt diya tha.)');
+  }
 }
 async function promptForPass() {
   // Cache password for this session so multi-part files ask only once
