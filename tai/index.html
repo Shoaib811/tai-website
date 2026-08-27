@@ -546,17 +546,30 @@ async function processUpload(data, origName) {
   try {
     const size = data.byteLength;
     if (size > state.quota - state.used) { throw new Error('Quota exceed ho gayi'); }
-    const parts = Math.ceil(size / (100*1024 - 28));
+    const plan = state.plan || 'trial';
+    // Basic/Trial: poori file EK part mein encrypt+upload (koi split nahi).
+    // Pro: 100KB chunks mein split (server pro part limit ~110KB hai).
+    const single = (plan === 'trial' || plan === 'basic');
     const partList = [];
-    $('upload-status').textContent='Encrypting & sharding...';
-    for (let i=0;i<parts;i++) {
-      const start = i*(100*1024-28);
-      const chunk = data.slice(start, start + (100*1024-28));
-      const enc = await encryptBytes(new Uint8Array(chunk));
+    if (single) {
+      $('upload-status').textContent='Encrypting...';
+      const enc = await encryptBytes(new Uint8Array(data));
+      $('upload-status').textContent='Uploading...';
       const up = await api('/parts','POST',enc,true);
       partList.push({ id: up.id, size: enc.byteLength, sha256: up.sha256 });
-      $('upload-progress').style.width = Math.round(((i+1)/parts)*100)+'%';
-      $('upload-status').textContent = 'Uploading part '+(i+1)+'/'+parts;
+      $('upload-progress').style.width='100%';
+    } else {
+      const parts = Math.ceil(size / (100*1024 - 28));
+      $('upload-status').textContent='Encrypting & uploading...';
+      for (let i=0;i<parts;i++) {
+        const start = i*(100*1024-28);
+        const chunk = data.slice(start, start + (100*1024-28));
+        const enc = await encryptBytes(new Uint8Array(chunk));
+        const up = await api('/parts','POST',enc,true);
+        partList.push({ id: up.id, size: enc.byteLength, sha256: up.sha256 });
+        $('upload-progress').style.width = Math.round(((i+1)/parts)*100)+'%';
+        $('upload-status').textContent = 'Uploading part '+(i+1)+'/'+parts;
+      }
     }
     const mapping = Object.assign({}, state.mappings, {[origName]: {original:origName, parts:partList, created:Date.now()}});
     const blob = new Blob([JSON.stringify({mobile:mapping})], {type:'application/octet-stream'});
@@ -565,7 +578,7 @@ async function processUpload(data, origName) {
     $('upload-progress').style.width='100%';
     $('upload-status').textContent='Done!';
     $('upload-msg').className='msg ok';
-    $('upload-msg').textContent='✓ Upload complete! Encrypted & sharded.';
+    $('upload-msg').textContent='✓ Upload complete! Encrypted & saved.';
     state.used += size;
     sessionStorage_buzz();
     loadMyFiles();
