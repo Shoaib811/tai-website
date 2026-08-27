@@ -465,7 +465,9 @@ async function loadMyFiles() {
     const map = await api('/map', 'GET', null, true);
     let obj;
     try { obj = JSON.parse(new TextDecoder().decode(map)); } catch(e){ obj = {}; }
-    state.mappings = obj.files || {};
+    // Mobile uses its own 'mobile' namespace. Desktop stores an AES-encrypted blob
+    // (not valid JSON), which we ignore. Files uploaded from the phone live here.
+    state.mappings = (obj && obj.mobile) || {};
     renderFiles();
   } catch(e) {
     state.mappings = {};
@@ -540,7 +542,7 @@ async function processUpload(data, origName) {
       $('upload-status').textContent = 'Uploading part '+(i+1)+'/'+parts;
     }
     const mapping = Object.assign({}, state.mappings, {[origName]: {original:origName, parts:partList, created:Date.now()}});
-    const blob = new Blob([JSON.stringify({files:mapping})], {type:'application/octet-stream'});
+    const blob = new Blob([JSON.stringify({mobile:mapping})], {type:'application/octet-stream'});
     await api('/map','PUT', blob, true);
     state.mappings = mapping;
     $('upload-progress').style.width='100%';
@@ -633,7 +635,7 @@ async function startDownload() {
     if (del) {
       for (const p of parts) { try{ await api('/parts/'+p.id,'DELETE'); }catch(e){} }
       delete state.mappings[dlName];
-      const blob2 = new Blob([JSON.stringify({files:state.mappings})],{type:'application/octet-stream'});
+      const blob2 = new Blob([JSON.stringify({mobile:state.mappings})],{type:'application/octet-stream'});
       await api('/map','PUT',blob2,true);
       state.used -= parts.reduce((a,p)=>a+p.size,0);
       sessionStorage_buzz(); loadMyFiles(); toast('Deleted from cloud');
