@@ -209,7 +209,7 @@
         <span id="file-chooser-text" style="color:var(--muted); font-size:13px; text-align:center;"><b style="color:var(--accent);">Choose File</b><br>Gallery ya files se select karo</span>
       </label>
       <button class="btn-main" id="cancel-upload-btn" style="display:none; background:var(--danger); color:#fff;" onclick="cancelUpload()">✕ Cancel Selected File</button>
-      <div class="field" style="margin-top:12px;"><label>File aapke device pe AES-256-GCM se encrypt hoga, shard hoga, phir cloud pe store hoga.</label></div>
+      <div class="field" id="aes-note" style="margin-top:12px;"><label>File aapke device pe AES-256-GCM se encrypt hoga, shard hoga, phir cloud pe store hoga.</label></div>
       <button class="btn-main" onclick="startUpload()">Encrypt &amp; Upload</button>
       <div class="progress-wrap">
         <div class="progress-bar"><div class="progress-fill" id="upload-progress"></div></div>
@@ -549,6 +549,8 @@ function cancelUpload() {
 function startUpload() {
   const f = $('upload-file-input').files[0];
   if (!f) { $('upload-msg').textContent='Pehle file choose karo (📁 button)'; return; }
+  $('cancel-upload-btn').style.display = 'none';
+  const _an = document.getElementById('aes-note'); if (_an) _an.style.display = 'none';
   $('upload-msg').textContent='';
   const reader = new FileReader();
   reader.onload = () => processUpload(reader.result, f.name);
