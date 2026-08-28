@@ -1,4 +1,4 @@
-const CACHE = 'tai-cache-v4';
+const CACHE = 'tai-cache-v5';
 const ASSETS = [
   './',
   'index.html',
