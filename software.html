@@ -264,7 +264,7 @@
       <p style="color:var(--muted); font-size:12px; margin-top:14px;">Install karne ke liye browser menu &rarr; "Add to Home Screen" / "Install App".</p>
     </div>
     <div style="text-align:center;" id="qr-box">
-      <div id="qr-code" style="display:inline-block; background:#fff; padding:16px; border-radius:12px;"></div>
+      <div style="display:inline-block; background:#fff; padding:16px; border-radius:12px;"><img src="qr-tai.png" alt="TAI mobile app QR" style="width:180px; height:180px; display:block;"></div>
       <p style="color:var(--muted); font-size:12px; margin-top:12px;">Scan with phone camera</p>
     </div>
   </div>
@@ -363,18 +363,6 @@
     <div><a href="#">Terms</a> &nbsp;&middot;&nbsp; <a href="#">Privacy</a> &nbsp;&middot;&nbsp; <a href="mailto:info@code99.pk">info@code99.pk</a></div>
   </div>
 </footer>
-
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-<script>
-  try {
-    new QRCode(document.getElementById("qr-code"), {
-      text: "https://code99.pk/tai/",
-      width: 180,
-      height: 180,
-      correctLevel: QRCode.CorrectLevel.H
-    });
-  } catch(e) {}
-</script>
 
 </body>
 </html>
