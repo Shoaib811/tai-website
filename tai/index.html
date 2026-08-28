@@ -15,7 +15,7 @@
   :root {
     --bg:#0f1318; --panel:#1a1f27; --card:#1e2430; --border:#2a3040;
     --fg:#e8ecf1; --muted:#7a8394; --accent:#34d058; --blue:#1f6feb;
-    --danger:#f85149; --purple:#8b5cf6;
+    --danger:#f85149; --purple:#8b5cf6; --accent2:#8b5cf6;
   }
   html,body { height:100%; }
   body { background:var(--bg); color:var(--fg); font-family:'Segoe UI',system-ui,-apple-system,sans-serif; overflow:hidden; }
@@ -70,9 +70,10 @@
   .auth-logo h1 { font-size:34px; letter-spacing:3px; font-weight:900; }
   .auth-logo h1 b { color:var(--accent); }
   .auth-logo p { color:var(--muted); font-size:12px; margin-top:4px; }
-  .tabs { display:flex; background:var(--panel); border-radius:10px; padding:4px; margin-bottom:20px; }
-  .tab { flex:1; padding:10px; text-align:center; border:none; background:none; color:var(--muted); font-size:14px; font-weight:700; border-radius:8px; cursor:pointer; }
-  .tab.on { background:var(--accent); color:#04260f; }
+  .tabs { display:flex; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:4px; margin-bottom:20px; }
+  .tab { flex:1; padding:11px; text-align:center; border:1px solid transparent; background:none; color:var(--muted); font-size:14px; font-weight:700; border-radius:8px; cursor:pointer; transition:all .15s ease; }
+  .tab:hover { color:var(--fg); }
+  .tab.on { background:linear-gradient(135deg,var(--accent),#2ea043); color:#04260f; border-color:var(--accent); box-shadow:0 4px 12px rgba(52,208,88,.35); }
   .panel { background:var(--panel); border-radius:14px; padding:20px; }
   .field { margin-bottom:14px; }
   .field label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
@@ -92,12 +93,6 @@
   .code-row { display:flex; gap:8px; justify-content:center; margin:16px 0 6px; }
   .code-box { width:44px; height:54px; text-align:center; font-size:24px; font-weight:800; border-radius:10px; background:var(--card); border:1px solid var(--border); color:var(--fg); outline:none; }
   .code-box:focus { border-color:var(--accent); }
-
-  /* Bottom nav */
-  .bottom-nav { position:fixed; bottom:0; left:0; right:0; display:flex; border-top:1px solid var(--border); background:var(--panel); padding-bottom:env(safe-area-inset-bottom); z-index:50; }
-  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 4px; background:none; border:none; color:var(--muted); font-size:10px; cursor:pointer; }
-  .nav-item .ni { font-size:20px; }
-  .nav-item.on { color:var(--accent); }
 
   .modal { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:flex-end; z-index:100; }
   .modal.active { display:flex; }
@@ -139,7 +134,11 @@
           <div class="field"><label>Password</label>
             <div class="pw-wrap"><input type="password" id="login-pw" placeholder="••••••••"><button class="eye" onclick="togglePw('login-pw',this)">👁</button></div>
           </div>
+          <div class="field"><label>Server (agar samajh me ho to chhod do)</label>
+            <div class="pw-wrap"><input type="text" id="login-server" placeholder="http://192.168.0.104:8800/api/v1"><button class="eye" id="set-server-btn" onclick="applyServerInput()">🎯</button></div>
+          </div>
           <button class="btn-main" onclick="doLogin()">Login</button>
+          <button class="btn-main" id="qr-connect-btn" style="background:var(--accent2);color:#fff;border:1px solid #a78bfa;margin-top:8px;font-size:14px;" onclick="openQrConnect()">📱 QR se Connect (Scan)</button>
           <div class="link" onclick="showForgot()">Forgot Password?</div>
           <div class="msg" id="login-msg"></div>
         </div>
@@ -204,12 +203,6 @@
     </div>
   </div>
 
-  <!-- BOTTOM NAV -->
-  <div class="bottom-nav" style="display:none;" id="bottom-nav">
-    <button class="nav-item on" onclick="showScreen('main')"><span class="ni">🏠</span>Home</button>
-    <button class="nav-item" onclick="showScreen('files')"><span class="ni">📁</span>My Files</button>
-  </div>
-
   <!-- UPLOAD MODAL -->
   <div class="modal" id="modal-upload">
     <div class="sheet">
@@ -258,13 +251,33 @@
     </div>
   </div>
 
+  <div class="modal" id="modal-qr">
+    <div class="sheet">
+      <h3>📱 QR se Connect</h3>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">PC app ka QR scan karo ya neeche paste karo.</p>
+      <video id="qr-video" style="width:100%;max-height:200px;background:#000;border-radius:10px;display:none;" muted playsinline></video>
+      <canvas id="qr-canvas" style="display:none;"></canvas>
+      <div id="qr-status" style="color:var(--muted);font-size:12px;margin:8px 0;">Camera scan ke liye Start dabao.</div>
+      <div style="display:flex;gap:8px;margin:6px 0;">
+        <button class="btn-main" id="qr-start" onclick="startQrScan()">▶ Start Camera</button>
+        <button class="btn-main" id="qr-stop" onclick="stopQrScan()" style="display:none;background:var(--danger,#f85149);">⏹ Stop</button>
+      </div>
+      <button class="btn-main" id="auto-connect-btn" style="background:var(--accent2);color:#fff;border:1px solid #a78bfa;margin-top:6px;" onclick="autoConnectLocal()">⚡ Auto Connect (same Wi-Fi)</button>
+      <div style="height:10px;"></div>
+      <textarea id="qr-paste" rows="2" placeholder="Ya QR content yahan paste karo...  (Server + Email jo bheja gaya)" style="width:100%;padding:10px;border-radius:10px;border:1px solid #333;background:#0d1117;color:#e6edf3;font-size:12px;box-sizing:border-box;"></textarea>
+      <button class="btn-main" onclick="applyQrConnect()">Connect</button>
+      <div class="msg" id="qr-msg"></div>
+    </div>
+  </div>
+
 </div>
 
 <div class="file-toast" id="toast" style="display:none;"></div>
 
 <script>
 'use strict';
-const API = 'https://api.code99.pk/api/v1';
+const DEFAULT_API = 'https://api.code99.pk/api/v1';
+let API = localStorage.getItem('tai_server') || DEFAULT_API;
 let token = localStorage.getItem('tai_token') || null;
 let state = { email: null, plan: 'trial', quota: 1073741824, used: 0, mappings: {} };
 
@@ -281,7 +294,12 @@ async function api(path, method='GET', body=null, raw=false) {
   if (body && !raw) headers['Content-Type'] = 'application/json';
   const opts = { method, headers };
   if (body) opts.body = raw ? body : JSON.stringify(body);
-  const res = await fetch(API + path, opts);
+  let res;
+  try {
+    res = await fetch(API + path, opts);
+  } catch(e) {
+    throw new Error('Server se connect nahi ho pa raha (check: server on hai? sahi IP? network?). API=' + API);
+  }
   if (res.status === 401) { logout(); throw new Error('Session expired. Login again.'); }
   const isJson = res.headers.get('content-type')?.includes('json');
   let data = isJson ? await res.json() : await res.arrayBuffer();
@@ -300,7 +318,6 @@ function toast(msg) {
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('screen-'+name).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('on', n.textContent.includes(name==='files'?'My':'Home')));
   if (name==='files') loadMyFiles();
 }
 function sessionStorage_buzz() {
@@ -351,6 +368,7 @@ async function doLogin() {
   const pw = $('login-pw').value;
   $('login-msg').textContent = 'Logging in...';
   try {
+    if(typeof applyServerInput === 'function'){ try{ applyServerInput(); }catch(e){} }
     const res = await api('/auth/login','POST',{email,password:pw});
     token = res.token; localStorage.setItem('tai_token', token);
     await setCryptoFromLogin(email, pw);
@@ -403,7 +421,6 @@ async function loadMe() {
 function enterApp() {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('screen-main').classList.add('active');
-  $('bottom-nav').style.display = 'flex';
   loadMyFiles();
 }
 async function doLogout() {
@@ -413,7 +430,6 @@ async function doLogout() {
 function logout() {
   token = null; localStorage.removeItem('tai_token');
   _cryptoKey = null; _cryptoEmail = null;
-  $('bottom-nav').style.display='none';
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('screen-auth').classList.add('active');
   $('login-msg').textContent='';
@@ -686,7 +702,134 @@ async function decryptBytes(bytes) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('screen-auth').classList.add('active');
   if (token && !$('login-email').value) { $('login-email').value = state.email || ''; }
+  const _sv = localStorage.getItem('tai_server');
+  if(_sv && $('login-server')){ $('login-server').value = _sv; } else if($('login-server')){
+    $('login-server').value = 'http://' + (window.location.hostname || '192.168.0.104') + ':8800/api/v1';
+  }
 })();
+
+/* ---------- QR Connect (server URL + email prefetch) ---------- */
+let _qrStream = null;
+let _qrRaf = null;
+const _qrCanvas = document.getElementById('qr-canvas');
+const _qrVideo = document.getElementById('qr-video');
+const _qrStatus = document.getElementById('qr-status');
+
+function _qrLog(msg){ if(_qrStatus) _qrStatus.textContent = msg; }
+
+function openQrConnect(){
+  document.querySelectorAll('.modal').forEach(m=>m.classList.remove('open'));
+  const m = $('modal-qr');
+  if(m) m.classList.add('open');
+  _qrLog('Ek option chuno: camera se scan karo ya neeche paste karo.');
+  const t = document.getElementById('qr-paste');
+  if(t) t.value = '';
+}
+
+function closeQrConnect(){
+  stopQrScan();
+  document.querySelectorAll('.modal').forEach(m=>m.classList.remove('open'));
+}
+
+function startQrScan(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    _qrLog('Is browser pe camera nahi chalega — paste wala option use karo.');
+    return;
+  }
+  try{ _qrStream && _qrStream.getTracks().forEach(t=>t.stop()); }catch(e){}
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(stream=>{
+    _qrStream = stream;
+    _qrVideo.srcObject = stream;
+    _qrVideo.setAttribute('playsinline','true');
+    _qrVideo.play();
+    _qrLog('Camera chal raha hai — QR ko frame ke andar rakho.');
+    _tickScan();
+  }).catch(()=>{ _qrLog('Camera permission nahi mili — paste wala option use karo.'); });
+}
+
+function stopQrScan(){
+  if(_qrRaf){ cancelAnimationFrame(_qrRaf); _qrRaf = null; }
+  if(_qrStream){ _qrStream.getTracks().forEach(t=>t.stop()); _qrStream = null; }
+}
+
+function _tickScan(){
+  if(!_qrStream) return;
+  const v = _qrVideo, c = _qrCanvas;
+  if(v && v.readyState === v.HAVE_ENOUGH_DATA && c){
+    const ctx = c.getContext('2d');
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    ctx.drawImage(v, 0, 0, c.width, c.height);
+    const img = ctx.getImageData(0, 0, c.width, c.height);
+    const code = typeof jsQR === 'function' ? jsQR(img.data, img.width, img.height) : null;
+    if(code && code.data){
+      _qrLog('QR mil gaya! Connect hora hai...');
+      stopQrScan();
+      _handleQrData(code.data);
+      return;
+    }
+  }
+  _qrRaf = requestAnimationFrame(_tickScan);
+}
+
+function _normalizeServer(s){
+  s = String(s || '').trim();
+  if(!s) return '';
+  if(!/^https?:\/\//i.test(s)){
+    // LAN IP ya host:port → http, warna domain → https
+    s = (/^(\d{1,3}\.){3}\d{1,3}(:\d+)?$/i.test(s) || /^[\w.-]+:\d+$/i.test(s) ? 'http://' : 'https://') + s;
+  }
+  s = s.replace(/\/+$/, '');
+  if(!/\/api\/v1\/?$/i.test(s)) s += '/api/v1';
+  return s;
+}
+
+function _handleQrData(data){
+  let cfg = null;
+  try{ cfg = JSON.parse(data); }catch(e){ cfg = { raw: data }; }
+  let server = cfg && cfg.server ? cfg.server : (cfg.raw || '');
+  server = _normalizeServer(server);
+  let email = (cfg && cfg.email) || '';
+  if(server){
+    try{ localStorage.setItem('tai_server', server); }catch(e){}
+  }
+  if(email && $('login-email')){ $('login-email').value = email; if(state) state.email = email; }
+  _qrLog('Server set: ' + (server || '—') + (email ? ' | email: ' + email : ''));
+}
+
+function applyQrConnect(){
+  const t = document.getElementById('qr-paste');
+  const data = (t && t.value) ? t.value.trim() : '';
+  if(!data){ _qrLog('Pehle kuch paste karo (ya camera se scan karo).'); return; }
+  _handleQrData(data);
+  _qrLog('Done! Login karo. Note: server tab aktive hoga jab app relaod ho.');
+}
+
+function autoConnectLocal(){
+  let host = window.location.hostname;
+  if(!host || host === 'localhost' || host === '127.0.0.1'){
+    host = '192.168.0.104'; // fallback: PC ka LAN IP
+  }
+  const server = 'http://' + host + ':8800/api/v1';
+  try{ localStorage.setItem('tai_server', server); }catch(e){}
+  API = server;
+  _qrLog('Server set: ' + server + ' | ab login karo.');
+  document.getElementById('qr-msg') && (document.getElementById('qr-msg').textContent = 'Connected to: ' + server);
+}
+
+function applyServerInput(){
+  const inp = document.getElementById('login-server');
+  let s = (inp && inp.value) ? inp.value.trim() : '';
+  if(!s){ document.getElementById('login-msg').textContent = 'Server URL likho, phir 🎯 dabao.'; document.getElementById('login-msg').className='msg err'; return; }
+  if(!/^https?:\/\//i.test(s)) s = 'http://' + s;
+  s = s.replace(/\/+$/,'');
+  if(!/\/api\/v1\/?$/i.test(s)) s += '/api/v1';
+  try{ localStorage.setItem('tai_server', s); }catch(e){}
+  API = s;
+  const msg = document.getElementById('login-msg');
+  if(msg){ msg.textContent = 'Server set: ' + s; msg.className = 'msg'; }
+  if(inp) inp.value = s;
+}
 </script>
+<script src="vendor/jsQR.js"></script>
 </body>
 </html>

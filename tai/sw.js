@@ -1,8 +1,9 @@
-const CACHE = 'tai-cache-v2';
+const CACHE = 'tai-cache-v4';
 const ASSETS = [
   './',
   'index.html',
   'manifest.json',
+  'vendor/jsQR.js',
 ];
 
 self.addEventListener('install', (e) => {
