@@ -134,11 +134,7 @@
           <div class="field"><label>Password</label>
             <div class="pw-wrap"><input type="password" id="login-pw" placeholder="••••••••"><button class="eye" onclick="togglePw('login-pw',this)">👁</button></div>
           </div>
-          <div class="field"><label>Server (agar samajh me ho to chhod do)</label>
-            <div class="pw-wrap"><input type="text" id="login-server" placeholder="http://192.168.0.104:8800/api/v1"><button class="eye" id="set-server-btn" onclick="applyServerInput()">🎯</button></div>
-          </div>
           <button class="btn-main" onclick="doLogin()">Login</button>
-          <button class="btn-main" id="qr-connect-btn" style="background:var(--accent2);color:#fff;border:1px solid #a78bfa;margin-top:8px;font-size:14px;" onclick="openQrConnect()">📱 QR se Connect (Scan)</button>
           <div class="link" onclick="showForgot()">Forgot Password?</div>
           <div class="msg" id="login-msg"></div>
         </div>
@@ -702,16 +698,7 @@ async function decryptBytes(bytes) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('screen-auth').classList.add('active');
   if (token && !$('login-email').value) { $('login-email').value = state.email || ''; }
-  const _sv = localStorage.getItem('tai_server');
-  if(_sv && $('login-server')){
-    let sv = _sv;
-    if (/^(https?:\/\/)code99\.pk:8800/i.test(sv)) { sv = 'https://api.code99.pk'; try{ localStorage.setItem('tai_server', sv); }catch(e){} }
-    $('login-server').value = sv;
-  } else if($('login-server')){
-    const _host = window.location.hostname || '192.168.0.104';
-    const _live = (window.location.protocol === 'https:') || _host === 'code99.pk' || _host === 'localhost' || _host === '127.0.0.1';
-    $('login-server').value = _live ? 'https://api.code99.pk/api/v1' : ('http://' + _host + ':8800/api/v1');
-  }
+  applyServerInput();
 })();
 
 /* ---------- QR Connect (server URL + email prefetch) ---------- */
@@ -823,17 +810,11 @@ function autoConnectLocal(){
 }
 
 function applyServerInput(){
-  const inp = document.getElementById('login-server');
-  let s = (inp && inp.value) ? inp.value.trim() : '';
-  if(!s){ document.getElementById('login-msg').textContent = 'Server URL likho, phir 🎯 dabao.'; document.getElementById('login-msg').className='msg err'; return; }
-  if(!/^https?:\/\//i.test(s)) s = 'http://' + s;
-  s = s.replace(/\/+$/,'');
-  if(!/\/api\/v1\/?$/i.test(s)) s += '/api/v1';
+  const s = 'https://api.code99.pk/api/v1';
   try{ localStorage.setItem('tai_server', s); }catch(e){}
   API = s;
   const msg = document.getElementById('login-msg');
-  if(msg){ msg.textContent = 'Server set: ' + s; msg.className = 'msg'; }
-  if(inp) inp.value = s;
+  if(msg){ msg.textContent = ''; msg.className = 'msg'; }
 }
 </script>
 <script src="vendor/jsQR.js"></script>
